@@ -39,7 +39,7 @@ export function useChatMoreItems(profile: Bot, phoneHeader = false): { items: Si
   const selection = profile.modelSelection;
   // A18 (v140): el menu muestra el modelo y la intensidad; en movil ya lo hacia, ahora tambien en escritorio.
   const modelName = selection
-    ? state.instances.find((candidate) => candidate.instanceId === selection.instanceId)?.models.options.find((option) => option.id === selection.model)?.label ?? selection.model
+    ? state.instances.find((candidate) => candidate.instanceId === selection.instanceId)?.models?.options?.find((option) => option.id === selection.model)?.label ?? selection.model
     : "";
   // On a phone the header drops the profile pill's click target, the model chip and the Bot's screen button; they live here.
   const phoneItems: SidebarMenuItem[] = phoneHeader ? [

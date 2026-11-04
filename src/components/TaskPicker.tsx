@@ -8,6 +8,11 @@ import { useMenuMotion } from "./MenuMotion";
 import { t } from "@/lib/i18n";
 import { localizedTaskTitle } from "@/lib/task-title";
 import { COMPACT_BUBBLE } from "@/lib/compact-chip";
+import { ELEVATED_FLOAT, ELEVATED_HOVER } from "./elevated";
+
+/** A19b (v140): el desplegable de hilos de la cabecera usa el MISMO fondo que la pastilla del nombre
+ *  (bg-composer: blanco en Atelier, oscuro en los demas temas), no el tono de menu. */
+const HEADER_MENU_SHEET = "popover-surface flex flex-col gap-1 rounded-[var(--radius-menu)] border border-hairline/50 bg-composer p-1.5 shadow-lg [&_svg.lucide]:stroke-[1.5]";
 import { formatTaskTokens, headlineTokens, usageDetail } from "@/lib/usage";
 import { nextRename } from "@/lib/rename";
 import { FolderIcon, NewThreadButton } from "./BotProjects";
@@ -87,6 +92,7 @@ function ConversationTaskPicker({
   attention,
   onAttentionJump,
   workingElsewhere = 0,
+  variant = "default",
 }: {
   threadId: string;
   tasks: PickerTask[];
@@ -101,6 +107,8 @@ function ConversationTaskPicker({
   onPin?: (threadId: string, pinned: boolean) => void;
   attention?: AttentionThread[];
   onAttentionJump?: (entry: AttentionThread) => void;
+  /** A19b (v140): la pastilla de la cabecera, con el fondo de la pastilla del nombre. */
+  variant?: "default" | "header";
 }) {
   const [open, setOpen] = useState(false);
   const motion = useMenuMotion(open);
@@ -227,11 +235,13 @@ function ConversationTaskPicker({
         title={switchTitle}
         aria-label={t("task.switch")}
         className={cn(
-          "flex max-w-[220px] items-center gap-1.5 rounded-full border border-hairline/40 px-2.5 py-1 text-[13px] text-ink-secondary hover:bg-raised hover:text-ink",
-          COMPACT_BUBBLE,
+          variant === "header"
+            ? "flex h-9 max-w-[260px] items-center gap-1.5 rounded-full py-0.5 pl-3 pr-2.5 text-[14px] text-ink"
+            : "flex max-w-[220px] items-center gap-1.5 rounded-full border border-hairline/40 px-2.5 py-1 text-[13px] text-ink-secondary hover:bg-raised hover:text-ink",
+          variant === "header" ? cn(ELEVATED_FLOAT, ELEVATED_HOVER) : COMPACT_BUBBLE,
         )}
       >
-        <span className="truncate @max-4xl/chathead:hidden">{t("task.switch")}</span>
+        <span dir="auto" className="truncate @max-4xl/chathead:hidden">{variant === "header" ? (current?.title ?? t("task.switch")) : t("task.switch")}</span>
         <span className="shrink-0 tabular-nums opacity-60 @max-4xl/chathead:opacity-100">{tasks.length}</span>
         {workingElsewhere > 0 && (
           <span
@@ -246,7 +256,7 @@ function ConversationTaskPicker({
       </button>
 
       {motion.shown && (
-        <div className={cn("absolute right-0 top-full z-40 mt-1 w-[300px] overflow-hidden", MENU_SHEET, motion.className)} {...motion.exitProps}>
+        <div className={cn("absolute right-0 top-full z-40 mt-1 w-[300px] overflow-hidden", variant === "header" ? HEADER_MENU_SHEET : MENU_SHEET, motion.className)} {...motion.exitProps}>
           <div>
             <div className="flex items-center gap-2 rounded-md bg-ink/[0.05] px-2 py-1.5 focus-within:ring-2 focus-within:ring-focus/60">
               <Search size={14} className="shrink-0 text-ink-secondary" />
@@ -441,12 +451,13 @@ export function BotActivityPicker({ bot }: { bot: Bot }) {
   );
 }
 
-export function TaskPicker({ bot }: { bot: Bot }) {
+export function TaskPicker({ bot, variant = "default" }: { bot: Bot; variant?: "default" | "header" }) {
   const { state, dispatch } = useStore();
   const showThreads = useShowThreads();
   if (!showThreads) return null;
   return (
     <ConversationTaskPicker
+      variant={variant}
       threadId={bot.threadId}
       tasks={orderedThreadList((bot.tasks ?? []).filter((task) => !task.routineRunId))}
       busy={false}
