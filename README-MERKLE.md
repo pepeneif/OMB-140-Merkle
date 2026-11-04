@@ -18,7 +18,7 @@ Rama base: **`base-v0.1.140`** = v0.1.140 original sin parches.
 | v140-A6 | Tema Atelier: burbuja del usuario blanca, igual que la del bot | A6 (0023) | PENDIENTE |
 | v140-A7 | Cuadro "This run" conserva el colapso (llave global, sobrevive recargas) | A7 (0032) | PENDIENTE |
 | v140-A8 | Búsqueda dentro de las tablas siempre | A8 (0020) | PENDIENTE |
-| v140-A9 | Bloque de superficie (prompt del harness) compacto | A15 (0037) | PENDIENTE |
+| v140-A9 | Bloque de superficie (prompt del harness) compacto | A15 (0037) | APLICADO (ef840d27f) + desplegado en alfa |
 
 ### B — Pendientes técnicos
 | Código | Qué es | Estado |
