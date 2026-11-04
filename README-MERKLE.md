@@ -10,7 +10,7 @@ Rama base: **`base-v0.1.140`** = v0.1.140 original sin parches.
 ### A — Parches que aplicamos a la 140
 | Código | Qué es | Origen (en la 130) | Estado |
 |---|---|---|---|
-| v140-A1 | Reponer `openssh-client` + `docker.io` en la imagen runtime (el escritorio del VPS se maneja por Docker-over-SSH) | 0011 | APLICADO (001) |
+| v140-A1 | Reponer `openssh-client` + `docker.io` en la imagen runtime (el escritorio del VPS se maneja por Docker-over-SSH) | 0011 | APLICADO (001) + desplegado en alfa |
 | v140-A2 | Ningún bot muestra su rol junto al nombre | A2 (0021) | PENDIENTE |
 | v140-A3 | Formato markdown en los mensajes del USUARIO | A3 (0020) | PENDIENTE |
 | v140-A4 | Narración interna: fondo transparente, 2 px menor, padding vertical a la mitad | A4 (0017/0030) | PENDIENTE |
@@ -23,7 +23,7 @@ Rama base: **`base-v0.1.140`** = v0.1.140 original sin parches.
 ### B — Pendientes técnicos
 | Código | Qué es | Estado |
 |---|---|---|
-| v140-B1 | Escritorio del VPS: construir/etiquetar la imagen de escritorio `cua-local-vm:driver-0.37.0-v8` (la 140 pide la capa v8; en el host solo hay v5/v6) | EN CURSO |
+| v140-B1 | Escritorio del VPS: construir/etiquetar la imagen de escritorio `cua-local-vm:driver-0.37.0-v8` (la 140 pide la capa v8; en el host solo hay v5/v6) | HECHO (imagen `59bff5bd748e`, capa 8) |
 | v140-B2 | App iOS: por qué los hilos se despliegan distinto tras 107→130 | PENDIENTE |
 | v140-B3 | Procedimiento alfa → producción (incremental vs de un jalón) | PENDIENTE |
 
@@ -32,6 +32,7 @@ Rama base: **`base-v0.1.140`** = v0.1.140 original sin parches.
 |---|---|
 | v140-C1 | Fork `pepeneif/OMB-140-Merkle` creado + rama `base-v0.1.140` (v0.1.140 limpio) |
 | v140-C2 | v0.1.140 desplegada en alfa (`alfa.merkle.space`) sobre un clon del dataset de producción |
+| v140-C3 | Imagen `openmausbot:v0.1.140` reconstruida con el parche 001 y recreada en alfa (healthy) |
 
 ### D — Compactación / tamaño de datos
 | Código | Qué es | Estado |
@@ -44,7 +45,11 @@ Rama base: **`base-v0.1.140`** = v0.1.140 original sin parches.
 ## Bitácora de parches
 - **001** (v140-A1): Dockerfile — repone `openssh-client` y `docker.io` en el paso apt del runtime,
   igual que la 130. Sin ellos OMB no alcanza el daemon Docker del VPS por SSH y el escritorio del bot
-  no se crea, actualiza ni ve.
+  no se crea, actualiza ni ve. Verificado en alfa: `ssh`/`docker` presentes y el daemon responde por SSH.
+- **Imagen de escritorio v8** (v140-B1): construida con el Dockerfile que genera el propio OMB
+  (`server/container-computer.ts` → `managedImageDockerfile`), base `trycua/xfce-cua@sha256:274eb6…`.
+  Queda etiquetada `localhost/openmausbot/cua-local-vm:driver-0.37.0-v8` (`59bff5bd748e`), que es la
+  referencia que la 140 espera (`IMAGE_LAYER_VERSION = "8"`).
 
 ## No reciclable tal cual desde la 130
 Los parches que tocan la UI o el compositor (A1, A2, A8, A9, A10, A11, A13, A14, A15 y 0020–0037)
