@@ -181,6 +181,21 @@ describe("the Simple header", () => {
     fixture.showThreads = true;
   });
 
+  it("puts the pill at the top right in Simple mode, beside the computer icon, not centred (v140-G)", () => {
+    fixture.advanced = false;
+    try {
+      const markup = renderToStaticMarkup(createElement(ChatView, { bot }));
+      const row = markup.match(/data-chathead-row="true" class="([^"]*)"/)?.[1] ?? "";
+      expect(row.split(" ")).toEqual(expect.arrayContaining(["justify-end", "gap-2"]));
+      expect(row).not.toContain("grid-cols-");
+      const identity = /data-chathead-identity="true" class="([^"]*)"/.exec(markup)?.[1] ?? "";
+      expect(identity).not.toContain("justify-self-center");
+      expect(identity).not.toContain("col-start-2");
+    } finally {
+      fixture.advanced = true;
+    }
+  });
+
   it("opens the bot panel from the pill", () => {
     fixture.advanced = false;
     fixture.dispatch.mockClear();
