@@ -475,7 +475,7 @@ const Bubble = memo(function Bubble({
                   : narration
                     ? cn(formatted ? formattedReplyWidth(text) : "", "rounded-2xl px-4 py-[5px] text-[13px] text-ink")
                     : formatted
-                      ? cn(formattedReplyWidth(text), "px-1 text-ink")
+                      ? cn(formattedReplyWidth(text), "rounded-2xl bg-card px-4 py-2.5 text-ink", isFinalBotBubble && TINT_BORDER_CLASS)
                       : cn(simple ? SIMPLE_BOT_BUBBLE : "bg-card px-4 py-2.5 text-ink", isFinalBotBubble && TINT_BORDER_CLASS),
             simple && join && !split && !attachmentsOnly && !tabled && joinedCorners(user ? "end" : "start", join),
           )}
@@ -824,7 +824,7 @@ const MessagesList = memo(function MessagesList({
   );
 });
 
-const CHATHEAD_PILL = `flex min-w-0 items-center gap-2 rounded-full py-0.5 pl-1.5 text-ink ${ELEVATED_FLOAT}`;
+const CHATHEAD_PILL = `flex h-9 min-w-0 items-center gap-2 rounded-full py-0.5 pl-1.5 text-ink ${ELEVATED_FLOAT}`;
 
 export function ChatView({ bot: profile }: { bot: Bot }) {
   const bot = useMemo(() => currentTaskBot(profile), [profile]);

@@ -3067,10 +3067,18 @@ button:disabled.bg-danger {
 }
 
 /* A6 + A10 (v140): en Atelier el fondo de MIS mensajes es BLANCO aunque "Color my messages"
-   este encendido (el color del bot se indica con el borde de A10, no con el relleno). */
+   este encendido (el color del bot se indica con el borde de A10, no con el relleno).
+   La tinta del tono del bot es clara (pensada para su relleno de color), asi que sobre el
+   blanco forzado hay que devolver los tokens de tinta de Atelier o el texto queda invisible. */
 [data-skin="atelier"] .user-bubble-colored {
   background-color: #ffffff !important;
   background-image: none !important;
+  --color-ink: #1a1a18 !important;
+  --color-ink-secondary: #6b6559 !important;
+  --color-ink-tertiary: #6d685c !important;
+  --color-bubble-user-ink: #1a1a18 !important;
+  --bubble-selection: #d9d2c6 !important;
+  --bubble-selection-ink: #1a1a18 !important;
 }
 [data-chat-bubble="simple"].user-bubble-colored {
   box-shadow: inset 0 0.5px 0 rgb(255 255 255 / 0.16);
