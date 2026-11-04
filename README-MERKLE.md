@@ -54,3 +54,10 @@ Rama base: **`base-v0.1.140`** = v0.1.140 original sin parches.
 ## No reciclable tal cual desde la 130
 Los parches que tocan la UI o el compositor (A1, A2, A8, A9, A10, A11, A13, A14, A15 y 0020–0037)
 chocan porque la UI de la 140 cambió. Se rehacen sobre la 140.
+
+### Bitácora de parches (cont.)
+- **v140-B (2026-11-04)**: cuatro ajustes de UI pedidos por Jose sobre el build de alfa —
+  (1) la pastilla del nombre iguala el alto (36px) de la de hilos; (2) las respuestas finales con formato
+  recuperan el fondo de tarjeta (`bg-card`) que el upstream quitó en `e00a082e3`; (3) Atelier con
+  "Color my messages" ya no deja el texto blanco sobre blanco (tokens de tinta oscura dentro de la
+  burbuja blanca); (4) el desplegable de hilos se porta idéntico al de la 130. Commit `8e4c339fa`.
