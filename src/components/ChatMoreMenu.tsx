@@ -37,7 +37,8 @@ export function useChatMoreItems(profile: Bot, phoneHeader = false): { items: Si
   const transcript = () => formatTranscriptMarkdown({ title: bot.name, messages, botName: bot.name, isGroup: false });
   const threads = showThreads ? [] : orderedThreadList((profile.tasks ?? []).filter((task) => !task.routineRunId));
   const selection = profile.modelSelection;
-  const modelName = phoneHeader && selection
+  // A18 (v140): el menu muestra el modelo y la intensidad; en movil ya lo hacia, ahora tambien en escritorio.
+  const modelName = selection
     ? state.instances.find((candidate) => candidate.instanceId === selection.instanceId)?.models.options.find((option) => option.id === selection.model)?.label ?? selection.model
     : "";
   // On a phone the header drops the profile pill's click target, the model chip and the Bot's screen button; they live here.
@@ -74,6 +75,20 @@ export function useChatMoreItems(profile: Bot, phoneHeader = false): { items: Si
       active: findOpen,
       trailing: <ShortcutHint id="find-conversation" />,
       onSelect: () => requestChatFind(bot.threadId),
+    },
+    {
+      key: "model",
+      label: t("model.simple.model"),
+      icon: <Cpu size={16} />,
+      value: modelName,
+      onSelect: () => openBotSettings(dispatch, "model"),
+    },
+    {
+      key: "reasoning",
+      label: t("model.effort.label"),
+      icon: <Gauge size={16} />,
+      value: selection?.effort ?? "",
+      onSelect: () => openBotSettings(dispatch, "model"),
     },
     ...phoneScreen,
     ...(showThreads ? [] : [{
