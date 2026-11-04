@@ -195,7 +195,7 @@ export function SidebarFooterNav({
   );
 
   if (iconsOnly) {
-    return <nav data-tour="tools" aria-label={t("sidebar.tools")} className="flex flex-col items-center gap-1">{rows}</nav>;
+    return <nav data-tour="tools" aria-label={t("sidebar.tools")} className="flex flex-col items-center gap-px">{rows}</nav>;
   }
   return (
     <div data-tour="tools">

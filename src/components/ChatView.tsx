@@ -824,7 +824,7 @@ const MessagesList = memo(function MessagesList({
   );
 });
 
-const CHATHEAD_PILL = `flex h-9 min-w-0 items-center gap-2 rounded-full py-0.5 pl-3 text-ink ${ELEVATED_FLOAT}`;
+const CHATHEAD_PILL = `flex h-9 min-w-0 items-center gap-2 rounded-full py-0.5 pl-[18px] text-ink ${ELEVATED_FLOAT}`;
 
 export function ChatView({ bot: profile }: { bot: Bot }) {
   const bot = useMemo(() => currentTaskBot(profile), [profile]);

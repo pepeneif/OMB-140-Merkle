@@ -297,14 +297,14 @@ describe("Simple-mode sidebar layout", () => {
     handle.onAvatars(true);
     expect(fixture.storage.get(SIDEBAR_DENSITY_KEY)).toBe("avatars");
     const { root, tree } = render();
-    expect(root.props.className).toContain("w-[92px]");
+    expect(root.props.className).toContain("w-[72px]");
     expect(sectionOrder(tree)).toEqual([BOTS_SECTION_ID, CHANNELS_SECTION_ID, userSectionId("Work")]);
     expect(listedBots(tree)).toEqual(["atlas", "bea", "dodo"]);
     expect(headers(tree)).toEqual([]);
     expect(tree.filter((node) => node.type === SidebarRailSeparator)).toHaveLength(2);
     expect(tree.some((node) => node.type === SidebarSearchToggle)).toBe(false);
     expect(edge(tree)?.avatars, "the rail keeps its edge, to drag it open again").toBe(true);
-    expect(edge(tree)?.avatarsWidth).toBe(92);
+    expect(edge(tree)?.avatarsWidth).toBe(72);
     expect(tree.some((node) => node.props["data-sidebar-top-buttons"] !== undefined)).toBe(false);
   });
 

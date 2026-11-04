@@ -251,9 +251,9 @@ describe("sidebar top row", () => {
     const row = topRow(html);
     expect(row).not.toContain("data-workspace-switcher");
     expect(row).not.toContain("data-sidebar-top-spacer");
-    expect(classesOf(row, "data-sidebar-top-row")).toEqual(["flex", "items-center", "flex-col", "gap-[3.5px]", "px-2", "pt-3.5", "pb-1"]);
+    expect(classesOf(row, "data-sidebar-top-row")).toEqual(["flex", "items-center", "flex-col", "gap-[3px]", "px-2", "pt-[11px]", "pb-1"]);
     expect(row).not.toContain("data-traffic-light-space");
-    expect(classesOf(row, "data-sidebar-top-buttons")).toEqual(["relative", "flex", "shrink-0", "items-center", "flex-col", "gap-[3.5px]"]);
+    expect(classesOf(row, "data-sidebar-top-buttons")).toEqual(["relative", "flex", "shrink-0", "items-center", "flex-col", "gap-[3px]"]);
     expect(html.match(/Switch server:/g)).toHaveLength(1);
   });
 });
