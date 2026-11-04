@@ -88,3 +88,17 @@ chocan porque la UI de la 140 cambió. Se rehacen sobre la 140.
   montado para el hilo, cae a los ajustes. Pruebas dirigidas en verde (salvo 2 fallos preexistentes del
   badge de motor en `Sidebar.simple-mode.test.ts`, ajenos a este trabajo; se corrigieron aparte 3 expectativas
   obsoletas del menú ⋯ que el propio A18 había dejado atrás).
+
+- **v140-F (2026-11-04)**: refinamientos de la ronda de alfa (modo **avanzado**), commit `88b3ca3fe`.
+  (1) La pastilla del nombre del bot (arriba a la derecha) suma otros 2 espacios a la izquierda:
+  `pl-3` → `pl-[18px]`. (2) Rail avanzado: los iconos de la parte superior van 3px más cerca del borde
+  (`pt-3.5`→`pt-[11px]`) y los de arriba y abajo quedan 1px más juntos entre sí
+  (`gap-[3.5px]`→`gap-[3px]` arriba; `gap-1`→`gap-px` en la navegación inferior del pie). (3) **Ancho de la
+  columna colapsada**: Avanzada y Simple miden lo mismo (`w-[80px]`→`w-[72px]` en ambas; antes la Avanzada
+  era `w-[80px]` y la del rail simple `w-[92px]`), es decir 8px menos que la 130 (`avatarsWidth` 92→72).
+  (4) **Formato del texto del usuario**: con markdown activo, un solo `Enter` volvía a pintar una línea en
+  blanco de más; se porta el arreglo `0027 (A3 fix)` de la 130 — `.chat-md { white-space: normal }` en
+  `src/styles.css`, para que el `<br>` del render no herede el `pre-wrap` de la burbuja (el render emite un
+  `\n` literal tras cada `<br>`; con `pre-wrap` se pintaba como segunda línea). Prueba nueva en
+  `ChatMarkdown.test.ts`. Pruebas dirigidas **265/265** y `tsc --noEmit` limpio (los 6 fallos de
+  `Sidebar.simple-mode.test.ts`/`BotModelBadge.test.ts` son preexistentes, idénticos en HEAD).
