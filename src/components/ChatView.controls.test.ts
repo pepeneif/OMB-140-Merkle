@@ -47,7 +47,8 @@ vi.mock("./CitationUI", async (importOriginal) => ({
 }));
 vi.mock("./ModelPicker", () => ({ ModelPicker: (props: ComponentProps<typeof ModelPicker>) => {
   fixture.model = props;
-  return createElement("span", { "data-test-model-control": true });
+  // A hidden picker (A20, the chat's ⋯ opens it) draws no visible control: only its menu, on demand.
+  return createElement("span", { "data-test-model-control": props.hideTrigger ? undefined : true });
 } }));
 vi.mock("./ApprovalModeSelector", () => ({ ApprovalModeSelector: (props: ComponentProps<typeof ApprovalModeSelector>) => {
   fixture.approval = props;
@@ -131,7 +132,9 @@ describe("the header's right side", () => {
   it("keeps Advanced mode's computer and ⋯ in view, with the model inside ⋯ and the inspector unlocked (A18)", () => {
     fixture.advanced = true;
     const { markup } = header();
+    // A18: no model chip of its own; A20: a hidden picker the ⋯ menu opens directly, so no visible control either.
     expect(markup).not.toContain("data-test-model-control");
+    expect(fixture.model?.hideTrigger).toBe(true);
     expect(markup).toContain('data-tour="computer"');
     expect(markup).toContain('data-testid="chat-more"');
     const more = fixture.menus.find((menu) => menu.ariaLabel === "More")!;
@@ -583,6 +586,7 @@ describe("thread control placement", () => {
   it("keeps permissions inside the composer pill, with the model in the ⋯ menu (A18)", () => {
     const markup = renderToStaticMarkup(createElement(ChatView, { bot }));
     expect(markup).not.toContain("data-test-model-control");
+    expect(fixture.model?.hideTrigger).toBe(true);
     expect(markup.indexOf('data-tour="composer"')).toBeGreaterThan(-1);
     expect(markup.indexOf("data-test-approval-control")).toBeGreaterThan(markup.indexOf('data-tour="composer"'));
     expect(markup.indexOf("data-test-approval-control")).toBeLessThan(markup.indexOf("<textarea"));

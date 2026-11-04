@@ -33,6 +33,7 @@ import { t } from "@/lib/i18n";
 import { COMPACT_SQUARE } from "@/lib/compact-chip";
 import { useAiSwitch } from "@/lib/ai-switch";
 import { usePickerPane } from "@/lib/model-picker-pane";
+import { useModelPickerOpen } from "@/lib/model-picker-open";
 import { threadsOnOwnModel } from "../../shared/thread-model";
 import { ThreadModelsLine } from "./ThreadModelsLine";
 import { Select } from "./Select";
@@ -214,6 +215,7 @@ export function ModelPicker({
   className,
   contained = false,
   label,
+  hideTrigger = false,
   size = "md",
 }: {
   bot: Bot;
@@ -221,6 +223,8 @@ export function ModelPicker({
   className?: string;
   contained?: boolean;
   label?: ReactNode;
+  /** The trigger is not drawn: the picker only opens when something else asks it to (the chat's ⋯ menu). */
+  hideTrigger?: boolean;
   size?: "sm" | "md";
 }) {
   const { state, dispatch: storeDispatch, refreshInstances, refreshModels: refreshInstanceModels } = useStore();
@@ -608,6 +612,10 @@ export function ModelPicker({
     "aria-controls": open ? menuId : undefined,
     title: `${summary}${followLine}${attentionLine}${busyLine}`,
   };
+
+  // A request from the chat's ⋯ menu opens this picker directly, where it is mounted (the chat header in Advanced
+  // mode), rather than sending the person to Settings. The row only names the model in its own words.
+  useModelPickerOpen(threadId, openMenu);
 
   const trigger = advanced ? (
     <button
@@ -1003,12 +1011,13 @@ export function ModelPicker({
   return (
     <div ref={rootRef} className={cn(contained ? "w-full" : "relative", className)}>
       {contained ? (
-        <div className="flex items-center justify-between gap-4">
+        hideTrigger ? <button {...triggerProps} aria-hidden="true" tabIndex={-1} className="pointer-events-none absolute size-0 opacity-0" /> : <div className="flex items-center justify-between gap-4">
           {label}
           {trigger}
         </div>
       ) : (
-        trigger
+        // Hidden: an invisible zero-size anchor where the picker would sit, so its popover places here (the header).
+        hideTrigger ? <button {...triggerProps} aria-hidden="true" tabIndex={-1} className="pointer-events-none absolute size-0 opacity-0" /> : trigger
       )}
       {menu && floating ? createPortal(menu, document.body) : menu}
       {!contained && changedBotModel && !open && ownModelThreads > 0 && (

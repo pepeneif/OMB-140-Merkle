@@ -19,7 +19,7 @@ import {
   Settings as SettingsIcon,
   Smartphone,
   UserRound,
-  UsersRound,
+  Network,
   Zap,
 } from "lucide-react";
 
@@ -342,7 +342,7 @@ export function toolMenuItems({ activeView, automationsNeedYou, onAutomations, o
 }): SidebarMenuItem[] {
   return [
     { key: "automations", label: t("sidebar.nav.automations"), icon: <Zap size={16} />, active: activeView === "routines", attention: automationsNeedYou, onSelect: onAutomations },
-    { key: "team-map", label: t("sidebar.nav.teamMap"), icon: <UsersRound size={16} />, active: activeView === "team-map", onSelect: onTeamMap },
+    { key: "team-map", label: t("sidebar.nav.teamMap"), icon: <Network size={16} />, active: activeView === "team-map", onSelect: onTeamMap },
     ...(onFiles ? [{ key: "files", label: t("sidebar.nav.files"), icon: <FolderOpen size={16} />, active: activeView === "files", onSelect: onFiles }] : []),
     ...(archived?.count ? [{ key: "archived", label: t("sidebar.archived.title"), icon: <Archive size={16} />, value: String(archived.count), onSelect: archived.open }] : []),
   ];

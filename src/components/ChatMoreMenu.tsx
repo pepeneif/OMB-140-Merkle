@@ -4,6 +4,7 @@ import { currentTaskBot, openBotThread, useStore, visibleMessages, type Bot } fr
 import { useAdvancedMode } from "@/lib/interface-mode";
 import { useShowThreads } from "@/lib/thread-preferences";
 import { requestChatFind, useChatFindOpen } from "@/lib/chat-find";
+import { requestModelPicker } from "@/lib/model-picker-open";
 import { usageSummary } from "@/lib/chat-usage-summary";
 import {
   copyTranscriptToClipboard,
@@ -38,6 +39,9 @@ export function useChatMoreItems(profile: Bot, phoneHeader = false): { items: Si
   const threads = showThreads ? [] : orderedThreadList((profile.tasks ?? []).filter((task) => !task.routineRunId));
   const selection = profile.modelSelection;
   // A18 (v140): el menu muestra el modelo y la intensidad; en movil ya lo hacia, ahora tambien en escritorio.
+  // A20 (v140): al elegir el modelo o la intensidad se abre el selector de modelos del chat (igual que la 130), no
+  // los ajustes; si no hay selector montado para este hilo, cae a los ajustes.
+  const openModelPicker = () => { if (!requestModelPicker(bot.threadId)) openBotSettings(dispatch, "model"); };
   const modelName = selection
     ? state.instances.find((candidate) => candidate.instanceId === selection.instanceId)?.models?.options?.find((option) => option.id === selection.model)?.label ?? selection.model
     : "";
@@ -56,7 +60,7 @@ export function useChatMoreItems(profile: Bot, phoneHeader = false): { items: Si
       label: t("model.simple.model"),
       icon: <Cpu size={16} />,
       value: modelName,
-      onSelect: () => openBotSettings(dispatch, "model"),
+      onSelect: openModelPicker,
     } satisfies SidebarMenuItem]),
     {
       key: "computer",
@@ -81,14 +85,14 @@ export function useChatMoreItems(profile: Bot, phoneHeader = false): { items: Si
       label: t("model.simple.model"),
       icon: <Cpu size={16} />,
       value: modelName,
-      onSelect: () => openBotSettings(dispatch, "model"),
+      onSelect: openModelPicker,
     },
     {
       key: "reasoning",
       label: t("model.effort.label"),
       icon: <Gauge size={16} />,
       value: selection?.effort ?? "",
-      onSelect: () => openBotSettings(dispatch, "model"),
+      onSelect: openModelPicker,
     },
     ...phoneScreen,
     ...(showThreads ? [] : [{
