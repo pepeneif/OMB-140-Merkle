@@ -61,3 +61,15 @@ chocan porque la UI de la 140 cambió. Se rehacen sobre la 140.
   recuperan el fondo de tarjeta (`bg-card`) que el upstream quitó en `e00a082e3`; (3) Atelier con
   "Color my messages" ya no deja el texto blanco sobre blanco (tokens de tinta oscura dentro de la
   burbuja blanca); (4) el desplegable de hilos se porta idéntico al de la 130. Commit `8e4c339fa`.
+
+- **v140-C (2026-11-04)**: dos puntos de la ronda de alfa.
+  (1) *This run* recupera el colapso **global y durable** de la 130: una sola preferencia (misma en
+  todos los hilos) en `localStorage` (llave `omb-run-card-collapsed`) que sobrevive recargas; se
+  reabre solo con el clic. Se copió `src/lib/run-open-state.ts` de la 130 (+ su prueba) y se quitó la
+  `storeKey` por hilo de `VerifyCard.tsx`/`ChatView.tsx`. Commit `2bd8f5c48`.
+  (2) El selector de hilos no plegaba las corridas de automatización porque el **clon de datos** de
+  alfa había perdido la marca `routineRunId` en 49 tareas y le faltaban 44 hilos (incluido
+  "Automatizaciones · Log"); no era el código (el selector es idéntico al de la 130). Se **re-clonó**
+  el volumen `omb_140_data` desde `omb_prod_data` (15.2G, beta en solo-lectura), se borró el lease del
+  clon y se deshabilitaron las 9 rutinas activas en alfa para no duplicar informes. Resultado:
+  193 tareas, 89 con marca, hilo Log presente y sobrevive al arranque.
