@@ -73,3 +73,18 @@ chocan porque la UI de la 140 cambió. Se rehacen sobre la 140.
   el volumen `omb_140_data` desde `omb_prod_data` (15.2G, beta en solo-lectura), se borró el lease del
   clon y se deshabilitaron las 9 rutinas activas en alfa para no duplicar informes. Resultado:
   193 tareas, 89 con marca, hilo Log presente y sobrevive al arranque.
+
+- **v140-E (2026-11-04)**: seis ajustes de UI de la ronda de alfa. Commit `6a53606a6`.
+  (1) La pastilla del nombre del bot (arriba a la derecha) lleva más aire a la izquierda: `pl-1.5` → `pl-3`
+  (era el punto donde el nombre quedaba pegado al borde). (2) Los avatares del rail/lista encogen ~10%:
+  36→32, 44→40, 32→29. (3) Automations y Triggers se separan como en la 130: Automations pasa al icono de
+  calendario (`CalendarDays`, `scope: "schedules"`) y Triggers al rayo (`Zap`, `scope: "triggers"`); se
+  porta `scope` a `routinesFocus` (store) y el filtro/título a `TriggersPage`, también en la barra del
+  teléfono. (4) Team map usa el organigrama (`Network`) y no el de personas, en el footer, el menú de cuenta
+  y la barra del teléfono. (5) Los iconos de arriba y abajo del rail se acercan ~10%
+  (`gap-2`→`gap-[7px]`, `gap-1`→`gap-[3.5px]`). (6) A20: elegir el modelo o la intensidad en el menú ⋯ abre
+  el **selector de modelos del chat** como en la 130 (no los ajustes): se monta un `ModelPicker` oculto en la
+  cabecera avanzada más un store de petición (`src/lib/model-picker-open.ts`) que lo abre; si no hay selector
+  montado para el hilo, cae a los ajustes. Pruebas dirigidas en verde (salvo 2 fallos preexistentes del
+  badge de motor en `Sidebar.simple-mode.test.ts`, ajenos a este trabajo; se corrigieron aparte 3 expectativas
+  obsoletas del menú ⋯ que el propio A18 había dejado atrás).
