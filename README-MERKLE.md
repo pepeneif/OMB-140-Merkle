@@ -51,6 +51,17 @@ Rama base: **`base-v0.1.140`** = v0.1.140 original sin parches.
   Queda etiquetada `localhost/openmausbot/cua-local-vm:driver-0.37.0-v8` (`59bff5bd748e`), que es la
   referencia que la 140 espera (`IMAGE_LAYER_VERSION = "8"`).
 
+- **v140-G (2026-11-04)**: dos ajustes de la ronda de alfa, commit `2a9b765b1`.
+  (1) **Rail colapsado (modo simple, iconos)**: los dos grupos que Jose vio separados quedan **2px mas
+  juntos que en la 130**. En la 130 el tope (Search + New) y la columna de botones usan `gap-1` (4px) y el
+  pie `gap-0.5` (2px); en la 140 quedan **2px** arriba y **0** en el pie (`gap-0`), es decir 2px menos en
+  ambos. Afecta `Sidebar.tsx` (data-sidebar-top-row y data-sidebar-top-buttons) y `SidebarFooter.tsx` +
+  `SidebarFooterNav.tsx` (nav de tools y apilado del pie). Pruebas dirigidas actualizadas.
+  (2) **Modo simple: la pastilla del bot** pasa del centro de la barra superior a la **derecha, junto al
+  icono de Bot's screen**. En `ChatView.tsx` la fila de la cabecera usa `justify-end` en modo simple y la
+  identidad deja de ser columna central (`col-start-2`/`justify-self-center` solo en modo avanzado). Prueba
+  nueva en `ChatView.controls.test.ts`.
+
 ## No reciclable tal cual desde la 130
 Los parches que tocan la UI o el compositor (A1, A2, A8, A9, A10, A11, A13, A14, A15 y 0020–0037)
 chocan porque la UI de la 140 cambió. Se rehacen sobre la 140.
