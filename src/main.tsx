@@ -7,6 +7,7 @@ import { bootstrapBrand, productName } from "./lib/brand";
 import { loadPageLanguage } from "./lib/language-preference";
 import { applySkinChoice, readSkinChoice } from "./lib/skins";
 import { applyChatWidth, readChatWidth } from "./lib/chat-width";
+import { applyStoredBubbleWidths } from "./lib/bubble-width";
 import { applyFont, readFont } from "./lib/fonts";
 import { settleAdvancedModeDefault } from "./lib/interface-mode";
 import { BrowserSignInPage } from "./pair/BrowserSignInPage";
@@ -21,6 +22,7 @@ settleAdvancedModeDefault();
 applySkinChoice(readSkinChoice());
 applyFont(readFont());
 applyChatWidth(readChatWidth());
+applyStoredBubbleWidths();
 
 // The app is its own chunk, so these pages don't parse it. Everywhere else its fetch starts now, alongside the session
 // read, instead of after it. A failed fetch renders as a throw, so PageBoundary offers a reload.

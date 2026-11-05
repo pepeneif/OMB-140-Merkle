@@ -1125,6 +1125,52 @@
 .chat-md :is(strong, b) {
   font-weight: 600;
 }
+
+/* ────────────────────────────────────────────────────────────────────────
+   PERSONALIZACION MANAGER (0010, portada a la 140) — ancho de burbujas
+   ajustable por el usuario. Cada burbuja toma su max-width de una variable en
+   :root; el mango de arrastre vive en el borde libre (derecha en las del bot,
+   izquierda en las del usuario y en "This run"). Sin arrastrar, manda el valor
+   por defecto de la hoja.
+   ──────────────────────────────────────────────────────────────────────── */
+.bbl {
+  position: relative;
+}
+.bbl-bot {
+  max-width: min(var(--bubble-bot, var(--chat-bubble-max)), var(--chat-bubble-pct));
+}
+.bbl-user {
+  max-width: min(var(--bubble-user, var(--chat-bubble-max)), var(--chat-bubble-pct));
+}
+.bbl-run {
+  width: min(var(--bubble-run, 22rem), var(--chat-card-pct));
+  max-width: var(--chat-card-pct);
+}
+/* El mango solo existe en escritorio: en tactil no hay hover y chocaria con el
+   scroll y la seleccion de texto. Delgado, mas transparente y con un margen
+   arriba/abajo para no tocar la curvatura de la esquina de la burbuja. */
+.bbl-handle {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  cursor: col-resize;
+  touch-action: none;
+  opacity: 0;
+  border-radius: 9999px;
+  transition: opacity 120ms ease, background-color 120ms ease;
+}
+.bbl-bot > .bbl-handle { right: -7px; }
+.bbl-user > .bbl-handle { left: -7px; }
+.bbl-run > .bbl-handle { left: -7px; }
+.bbl:hover > .bbl-handle,
+.bbl-handle:focus-visible {
+  opacity: 1;
+  background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+@media (hover: none) {
+  .bbl-handle { display: none; }
+}
 [data-chat-bubble="simple"] :is(.chat-md, .chat-text),
 [data-chat-bubble="simple"].chat-text {
   line-height: 22px;

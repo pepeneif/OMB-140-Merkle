@@ -68,6 +68,7 @@ import { ThreadChip } from "./ThreadChip";
 import { HandoffChip } from "./HandoffReply"; import { TeammateChip } from "./TeammateChip"; import { useTeammates } from "@/state/team-people"; import type { MentionPeer } from "@/lib/mentions";
 import { NewConversationInstead } from "./NewConversationInstead";
 import { VerifyCard } from "./VerifyCard";
+import { BubbleResizeHandle } from "./BubbleResizeHandle";
 import { askText, runSkill, runSteps, runSummary, showRun, skillPrompt } from "@/lib/verify-steps";
 import { useShowRunCard } from "@/lib/run-card-preferences";
 import { useColorUserBubbles } from "@/lib/user-bubble-preference";
@@ -465,6 +466,8 @@ const Bubble = memo(function Bubble({
           className={cn(
             tabled ? "w-full" : "w-fit",
             simple ? !tabled && SIMPLE_BUBBLE_MAX : "max-w-[min(var(--chat-bubble-max),var(--chat-bubble-pct))] rounded-2xl text-[15px] leading-relaxed",
+            !simple && "bbl",
+            !simple && (user ? "bbl-user" : "bbl-bot"),
             emerging && "turn-answer",
             user && webhookView
               ? cn("overflow-hidden border border-accent/25 bg-card text-ink", simple ? cn("rounded-[18px]", SIMPLE_BUBBLE_TEXT) : "shadow-[0_10px_30px_rgba(0,0,0,0.18)]")
@@ -482,6 +485,7 @@ const Bubble = memo(function Bubble({
           style={user && !webhookView && !attachmentsOnly ? { ...ownBubbleStyle, ...(tinted ? { borderColor: tintBorderColor } : {}) } : (isFinalBotBubble ? { borderColor: tintBorderColor } : undefined)}
           title={workedFor === undefined ? new Date(message.at).toLocaleString() : `${workedLabel(workedFor)} · ${new Date(message.at).toLocaleString()}`}
         >
+          {!webhookView && <BubbleResizeHandle kind={user ? "user" : "bot"} className="bbl-handle" />}
           {replyTarget && (
             <div className="mb-2">
               <ReplyQuote

@@ -64,7 +64,7 @@ export function SidebarFooter({ density, simple = false, owner = null, archived,
       {density === "icons" ? (
         <>
           <SidebarPhoneButton density={density} onOpen={() => dispatch(phoneSettingsAction())} />
-          <div className="flex flex-col items-center justify-center gap-[3px]">
+          <div className="flex flex-col items-center justify-center gap-[2px]">
             <UpdateIndicator />
             <SidebarProfileMenu iconOnly />
           </div>

@@ -1160,7 +1160,7 @@ export function Sidebar({ open, onClose, collapseToIcons = false }: {
       aria-label={remoteClient ? t("sidebar.new") : t("sidebar.newOrShare")}
       className={phone ? PHONE_TOP_BUTTON : corner ? SIMPLE_CORNER_BUTTON : rail || simple ? SIMPLE_TOP_BUTTON : cn(
         "flex items-center justify-center text-ink-secondary transition-colors hover:bg-ink/[0.06] hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
-        density === "icons" ? "size-[46px] shrink-0 rounded-xl" : "size-8 rounded-full",
+        density === "icons" ? "size-8 shrink-0 rounded-md" : "size-8 rounded-full",
       )}
       title={remoteClient ? t("sidebar.new") : t("sidebar.newOrShare")}
     >
@@ -1309,7 +1309,7 @@ export function Sidebar({ open, onClose, collapseToIcons = false }: {
             onClick={openCommandPalette}
             aria-label={t("sidebar.searchAria")}
             title={t("sidebar.searchAria")}
-            className="flex size-[46px] shrink-0 items-center justify-center rounded-xl text-ink-secondary hover:bg-raised hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+            className="flex size-8 shrink-0 items-center justify-center rounded-md text-ink-secondary hover:bg-raised hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
           >
             <Search size={20} strokeWidth={1.5} />
           </button>}
@@ -1321,7 +1321,7 @@ export function Sidebar({ open, onClose, collapseToIcons = false }: {
               title={attentionTriggerLabel(attention.length)}
               className={cn(
                 "relative flex items-center justify-center text-ink-secondary transition-colors hover:bg-ink/[0.06] hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
-                density === "icons" ? "size-[46px] shrink-0 rounded-xl" : phone ? "size-10 shrink-0 rounded-full border border-hairline bg-card text-ink" : "size-8 rounded-full",
+                density === "icons" ? "size-8 shrink-0 rounded-md" : phone ? "size-10 shrink-0 rounded-full border border-hairline bg-card text-ink" : "size-8 rounded-full",
               )}
             >
               <Activity size={density === "icons" ? 20 : 18} strokeWidth={1.5} />
