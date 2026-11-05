@@ -1,7 +1,7 @@
 import { directMessageSent, roomMessageSent } from "@/lib/product-events";
 import { useComposerDictation } from "@/lib/use-composer-dictation";
 import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
-import { Mic, Paperclip, Square, X } from "lucide-react";
+import { BookOpen, Mic, Paperclip, Square, X } from "lucide-react";
 import { useStore, visibleMessages, currentTaskBot, type Bot, type Group, type InstanceInfo, type Message } from "@/state/store";
 import { cn } from "@/lib/cn";
 import { PHONE_LAYOUT, useMediaQuery } from "@/lib/use-media-query";
@@ -299,6 +299,7 @@ export function Composer({
   const slashSkills = useSlashSkills(group ? undefined : bot?.id, threadId, Boolean(slash) && slash?.start !== dismissedSlashAt);
   const canLearn = skillAuthoringEnabled(state.config) &&
     (group ? (members ?? []).some((member) => supportsAgents(state.instances, member)) : supportsAgents(state.instances, bot));
+  const canSetup = !group && Boolean(bot) && supportsAgents(state.instances, bot);
   const commandCandidates = useMemo(() => {
     if (!slash || slash.start === dismissedSlashAt) return [];
     const available: ComposerSlashCommand[] = [];
@@ -403,6 +404,13 @@ export function Composer({
     setCaret(learn.length);
     setChannelMode("chat");
     requestAnimationFrame(() => { inputRef.current?.focus(); inputRef.current?.setSelectionRange(learn.length, learn.length); });
+  };
+  const setupTask = () => {
+    const setup = "/setup ";
+    editText(setup + text.replace(/^\/setup\s*/, "").trimStart());
+    setCaret(setup.length);
+    setChannelMode("chat");
+    requestAnimationFrame(() => { inputRef.current?.focus(); inputRef.current?.setSelectionRange(setup.length, setup.length); });
   };
 
   const pendingCount = (state.pendingQueued[threadId] ?? []).length;
@@ -865,9 +873,20 @@ export function Composer({
                     <GoalToggle {...goal} />
                   </div>
                 )}
-                {advanced && approvalChoice && (
-                  <div className="col-start-1 row-start-1">
-                    <ApprovalModeSelector {...approvalChoice} />
+                {advanced && (approvalChoice || canSetup) && (
+                  <div className="col-start-1 row-start-1 flex items-center gap-1">
+                    {approvalChoice && <ApprovalModeSelector {...approvalChoice} />}
+                    {canSetup && (
+                      <button
+                        type="button"
+                        onClick={setupTask}
+                        aria-label={t("composer.setupTask")}
+                        title={t("composer.setupTask")}
+                        className="flex size-8 shrink-0 items-center justify-center rounded-full text-ink-secondary hover:bg-control hover:text-ink"
+                      >
+                        <BookOpen size={16} strokeWidth={1.75} absoluteStrokeWidth />
+                      </button>
+                    )}
                   </div>
                 )}
                 {modeBot && !remoteClient && advanced && (
