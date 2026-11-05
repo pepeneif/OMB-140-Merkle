@@ -131,3 +131,23 @@ chocan porque la UI de la 140 cambió. Se rehacen sobre la 140.
   El ancho por defecto de "This run" en la libreria queda en 352px (22rem), su ancho de la hoja en la 140.
   `tsc --noEmit` limpio; pruebas dirigidas en verde (salvo 2 fallos PREEXISTENTES del badge de motor en
   `Sidebar.simple-mode.test.ts` y 1 en `ChatView.conversational.test.ts`, identicos en HEAD limpio).
+
+- **v140-I (2026-11-05)**: dos puntos de la ronda de alfa. Commit `bb13928c6`.
+  (1) **Selector de modelos anclado al menu de 3 puntos** (A21): en modo Avanzado el menu ... abre el selector
+  de modelos del chat (A20), pero su ventana abria muy a la izquierda y no parecia relacionada con el menu. El
+  `ModelPicker` oculto de la cabecera se ancla ahora al borde inferior-derecho del contenedor de controles
+  (`data-chathead-controls`, que pasa a `relative`; el picker va en un `div absolute right-0 top-full`), que es
+  donde vive el menu ..., de modo que su popover abre pegado y alineado con ese menu. Se saca del flujo para no
+  meter un hueco de `gap`.
+  (2) **Compositor de captura con la caja de la 130** (0035/0036 portado): la 140 tenia un comportamiento propio
+  (con poco texto la caja iba entre los iconos y al pasar de un renglon el texto se subia encima de todos los
+  iconos, con `useStackedField`). Se porta el compositor NanoBot de la 130 a la 140: `ComposerEmoji.tsx` (con la
+  dependencia `emoji-picker-react` 4.18.0 y su lockfile), insercion del emoji en el caret (`insertEmoji`),
+  cluster izquierdo del modo Avanzado en **dos renglones** (aprobacion y lugar arriba; meta/Objetivo, learn —si
+  el icono existe— y adjuntar abajo; emojis arriba de adjuntar) y la caja de texto en `rows={2}` / `min-h-14`.
+  Se **quita el apilado** (`useStackedField`) de la 140: el texto ya no se sube encima de los iconos y se queda
+  junto a los botones con uno o varios renglones, como en la 130. El icono de learn es opcional (emojis van
+  aunque no este). Pruebas: `ComposerEmoji.test.ts` y `Composer.emoji.test.ts` nuevas; `Composer.simple.test.ts`
+  (bloque del apilado reescrito) y `ChatView.controls.test.ts` (min-h-14) actualizadas. `tsc --noEmit` limpio;
+  pruebas dirigidas **187/187** en verde (los fallos preexistentes —2 del badge de motor en
+  `Sidebar.simple-mode.test.ts` y 1 de `bg-card` en `ChatView.conversational.test.ts`— son identicos en HEAD).
