@@ -43,6 +43,19 @@ Rama base: **`base-v0.1.140`** = v0.1.140 original sin parches.
 | v140-D4 | `memory-journal` → wiki y podar | PENDIENTE |
 
 ## Bitácora de parches
+- **v140-K (2026-11-05)**: dos ajustes de la ronda de alfa sobre el reorden de bots de v140-J. Commit `a4ca0e5c7`.
+  (1) **Asa entre el avatar y el nombre**: en v140-J el asa `GripVertical` iba anclada al borde derecho de la fila
+  (absoluta, `right-9` / `right-[6.25rem]`), asi que caia a media fila y costaba verla. Ahora el asa vive **en
+  linea, dentro del bloque del nombre**, justo despues del avatar y antes del nombre (se dibuja al hover / foco,
+  como antes); sigue siendo la unica fuente de arrastre de la fila expandida.
+  (2) **Arrastrar bots con el rail colapsado (a la 130)**: en el rail de solo iconos el arrastre no funcionaba
+  porque `sidebarLayoutInteractive` es `false` con densidad `icons` y el hook marcaba el reorden como no movible,
+  de modo que las filas no recibian `drag.handle`. Se mantiene el reorden habilitado cuando la densidad es
+  `icons` (`enabled: (sections.interactive || density === "icons") && !phone`), asi que la fila entera del rail
+  vuelve a ser la fuente de arrastre, igual que en la 130.
+  Toca `src/components/Sidebar.tsx` (asa en linea + `enabled` con `icons`). Prueba nueva en
+  `Sidebar.departments.test.ts` ("keeps every row draggable in the icons-only rail"). Verificacion: `tsc` limpio,
+  `oxlint` 0/0, pruebas dirigidas **31/31** en verde (`Sidebar.departments` + `sidebar-bot-drop`).
 - **001** (v140-A1): Dockerfile — repone `openssh-client` y `docker.io` en el paso apt del runtime,
   igual que la 130. Sin ellos OMB no alcanza el daemon Docker del VPS por SSH y el escritorio del bot
   no se crea, actualiza ni ve. Verificado en alfa: `ssh`/`docker` presentes y el daemon responde por SSH.
