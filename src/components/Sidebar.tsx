@@ -775,6 +775,14 @@ export const BotListItem = memo(function BotListItem(props: BotRowProps) {
       <div className={cn("min-w-0 flex-1", iconOnly && "hidden")}>
         <div className={cn("flex items-baseline justify-between gap-2", simpleRow && "pr-7")}>
           <span className={cn("flex min-w-0 grow items-center gap-1.5 truncate text-ink", simpleRow ? "text-[14px] font-medium leading-5" : "text-[15px] font-semibold leading-5")}>
+            {drag && !renaming && !deleting && !iconOnly && (
+              // The grip is the row's drag source (the v130 gesture) and sits between the avatar and the name,
+              // where it is easy to spot, instead of off at the row's right edge.
+              <span data-bot-drag-handle={bot.id} {...drag.handle(bot.id)} aria-hidden="true" title={t("sidebar.section.dragToReorder")}
+                className="flex size-4 shrink-0 cursor-grab items-center justify-center rounded text-ink-secondary opacity-0 hover:bg-raised hover:text-ink group-hover:opacity-100 group-focus-within:opacity-100 active:cursor-grabbing">
+                <GripVertical size={13} />
+              </span>
+            )}
             {!simpleList && bot.pinned && <Pin size={12} className="shrink-0 text-ink-secondary" />}
             <RenameTitle
               key={iconOnly ? "icons" : "expanded"}
@@ -893,15 +901,6 @@ export const BotListItem = memo(function BotListItem(props: BotRowProps) {
       ><ChevronRight aria-hidden="true" size={13} className={cn("transition-transform", threadsOpen && "rotate-90")} /></button>}
       {!renaming && iconOnly && unread && (
         <span className={cn("pointer-events-none absolute size-2 rounded-full border border-panel bg-accent", railTile ? "right-1 top-1" : "bottom-1.5 right-1.5")} />
-      )}
-      {drag && !renaming && !deleting && !iconOnly && (
-        // The grip is the row's drag source (the v130 gesture): a drag it starts reorders the bot among its list.
-        // In the icons-only rail the whole tile is the drag source instead, so no grip is drawn there.
-        <span data-bot-drag-handle={bot.id} {...drag.handle(bot.id)} aria-hidden="true" title={t("sidebar.section.dragToReorder")}
-          className={cn("absolute top-1/2 z-10 flex size-5 -translate-y-1/2 cursor-grab items-center justify-center rounded text-ink-secondary opacity-0 hover:bg-raised hover:text-ink group-hover:opacity-100 group-focus-within:opacity-100 active:cursor-grabbing",
-            showThreads ? "right-[6.25rem]" : "right-9")}>
-          <GripVertical size={13} />
-        </span>
       )}
       {!renaming && !deleting && !iconOnly && <>
         {showThreads && <button type="button" aria-label={t("task.newShort")} title={t("task.newShort")} onClick={() => { setThreadsOpen(true); dispatch({ type: "newTask", botId: bot.id }); }}
@@ -1136,7 +1135,7 @@ export function Sidebar({ open, onClose, collapseToIcons = false }: {
   for (const group of sectionedRooms) {
     if (!sectionNames.includes(group.section!)) sectionNames.push(group.section!);
   }
-  const drops = botDrag.arrange({ enabled: sections.interactive && !phone, main: unsectionedBots, sectioned: sectionedBots, departments: sectionNames, bots: state.bots, taken: departmentNames(state) });
+  const drops = botDrag.arrange({ enabled: (sections.interactive || density === "icons") && !phone, main: unsectionedBots, sectioned: sectionedBots, departments: sectionNames, bots: state.bots, taken: departmentNames(state) });
   const naturalSectionIds = [
     ...(pinnedBots.length > 0 && !universalPins && !simpleDesk ? [PINNED_SECTION_ID] : []),
     ...(unsectionedRooms.length > 0 ? [CHANNELS_SECTION_ID] : []),

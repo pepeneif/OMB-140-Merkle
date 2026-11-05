@@ -70,9 +70,9 @@ function nodes(value: ReactNode): ReactElement<Props>[] {
     return [child, ...nodes(child.props.children)];
   });
 }
-function render() {
+function render(collapseToIcons = false) {
   fixture.index = 0;
-  const root = Sidebar({ open: false, onClose: () => {} }) as ReactElement<Props>;
+  const root = Sidebar({ open: false, onClose: () => {}, collapseToIcons }) as ReactElement<Props>;
   return [root, ...nodes(root.props.children)];
 }
 const rows = () => render().filter((node) => node.type === BotListItem).map((node) => node.props as unknown as RowProps);
@@ -154,6 +154,12 @@ describe("Simple's sidebar before anyone drags", () => {
   it("leaves rows still on a phone, where the menu moves them", () => {
     fixture.phone = true;
     expect(rows().every((props) => props.botDrag === undefined)).toBe(true);
+  });
+
+  it("keeps every row draggable in the icons-only rail, where the whole tile is the drag source", () => {
+    const icons = render(true).filter((node) => node.type === BotListItem).map((node) => node.props as unknown as RowProps);
+    expect(icons.length).toBeGreaterThan(0);
+    for (const props of icons) expect(props.botDrag!.handle(props.bot.id).draggable).toBe(true);
   });
 });
 
