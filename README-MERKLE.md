@@ -132,6 +132,28 @@ chocan porque la UI de la 140 cambió. Se rehacen sobre la 140.
   `tsc --noEmit` limpio; pruebas dirigidas en verde (salvo 2 fallos PREEXISTENTES del badge de motor en
   `Sidebar.simple-mode.test.ts` y 1 en `ChatView.conversational.test.ts`, identicos en HEAD limpio).
 
+- **v140-J (2026-11-05)**: tres puntos de la ronda de alfa. Commit `df97a9cfa`.
+  (1) **Reordenar los bots como en la 130**: la 140 habia quitado el asa de arrastre y cambiado el soltar, de
+  modo que el centro de una fila creaba un departamento nuevo en vez de reordenar. Se restaura el gesto de la
+  130: cada fila vuelve a mostrar el asa `GripVertical` (`data-bot-drag-handle`, al hover) como unica fuente de
+  arrastre, y el soltar coloca el bot **antes** (mitad superior) o **despues** (mitad inferior) de la fila bajo
+  el puntero, siempre reordenando. Crear un departamento queda en el menu del bot ("New department"), que ya lo
+  ofrecia. En el rail de solo iconos la fila entera sigue siendo la fuente de arrastre, sin asa. Cambia
+  `src/lib/sidebar-bot-drop.ts` (`botDropPlace(offset, height)` sin `group`) y `src/components/SidebarBotDrag.tsx`
+  (`BotRowDrag` separa `row` —solo destino— y `handle` —fuente—); en `Sidebar.tsx` se anade el asa y se engancha
+  `drag.handle` a la fila cuando es `iconOnly`. Alt+Up/Down no cambia. Se conserva el resaltado de "nuevo
+  departamento" para el menu. Pruebas de `sidebar-bot-drop` y `Sidebar.departments` actualizadas.
+  (2) **Boton `/setup` en el compositor**: en modo Avanzado, en el hueco de la fila de arriba entre el nivel de
+  aprobacion y "en donde corre" (columna 1, fila 1), se anade un boton con el icono de libro abierto (`BookOpen`)
+  que arranca un borrador `/setup ` igual que `/learn` arranca el suyo (`setupTask`). Solo aparece cuando el bot
+  soporta agentes y no es un grupo. Clave nueva `composer.setupTask` en `en.json`.
+  (3) **Iconos distintos en el menu `/`**: hoy `/learn` y `/setup` compartian `BookOpen`. Ahora `/learn` usa el
+  birrete (`GraduationCap`, el icono a la derecha de Goal) y `/setup` conserva el libro abierto, de modo que los
+  tres comandos preconstruidos (`/goal` diana, `/learn` birrete, `/setup` libro) tienen icono propio. Toca
+  `src/components/SlashCommandMenu.tsx`.
+  Verificacion: `tsc` limpio; pruebas dirigidas **46/46** en verde (los 2 fallos del badge de motor en
+  `Sidebar.simple-mode.test.ts` son PREEXISTENTES, identicos en HEAD limpio).
+
 - **v140-I (2026-11-05)**: dos puntos de la ronda de alfa. Commit `bb13928c6`.
   (1) **Selector de modelos anclado al menu de 3 puntos** (A21): en modo Avanzado el menu ... abre el selector
   de modelos del chat (A20), pero su ventana abria muy a la izquierda y no parecia relacionada con el menu. El
