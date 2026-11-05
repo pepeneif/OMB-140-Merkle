@@ -113,3 +113,21 @@ chocan porque la UI de la 140 cambió. Se rehacen sobre la 140.
   `\n` literal tras cada `<br>`; con `pre-wrap` se pintaba como segunda línea). Prueba nueva en
   `ChatMarkdown.test.ts`. Pruebas dirigidas **265/265** y `tsc --noEmit` limpio (los 6 fallos de
   `Sidebar.simple-mode.test.ts`/`BotModelBadge.test.ts` son preexistentes, idénticos en HEAD).
+
+- **v140-H (2026-11-05)**: dos puntos de la ronda de alfa. Commit `94b64cf52`.
+  (1) **Rail avanzado colapsado**: los cuadros de los iconos se encogen a los tamanos de la 130 — arriba
+  (busqueda, actividad, nuevo) y el boton de plegar de `size-[46px]` a **`size-8`** (32px) y el pie
+  (automatizaciones, triggers, apps, team map, files, estado del dispositivo) de `size-[46px]`/`size-10`/
+  `size-11` a los de la 130: `NavRow` iconsOnly `size-10`, telefono `size-10`, update `size-10`, perfil
+  `size-10` (rail) / `size-11`, `ChromeRailToggle` `size-8`. Con los huecos ya 2px menores que la 130, los
+  dos grupos quedan de verdad ~2px mas juntos. Toca `Sidebar.tsx`, `SidebarFooterNav.tsx`,
+  `SidebarPhoneButton.tsx`, `SidebarProfileMenu.tsx`, `UpdateIndicator.tsx`, `ChromeRailToggle.tsx` y el pie
+  de `SidebarFooter.tsx` (`gap-[3px]`→`gap-[2px]`). Pruebas de cabecera del rail actualizadas.
+  (2) **Mango de ancho de burbujas (0010) portado a la 140**: se copian `src/lib/bubble-width.ts` y
+  `src/components/BubbleResizeHandle.tsx` de la 130; se anade el bloque `.bbl`/`.bbl-handle` a
+  `src/styles.css` (unlayered, como en la 130), el mango en `ChatView.tsx` (independiente para tus burbujas,
+  las del agente) y en `VerifyCard.tsx` (la tarjeta "This run", con `bbl-run`), y `applyStoredBubbleWidths()`
+  en `main.tsx`. Se guarda por dispositivo (localStorage), doble clic restablece, y en tactil se oculta.
+  El ancho por defecto de "This run" en la libreria queda en 352px (22rem), su ancho de la hoja en la 140.
+  `tsc --noEmit` limpio; pruebas dirigidas en verde (salvo 2 fallos PREEXISTENTES del badge de motor en
+  `Sidebar.simple-mode.test.ts` y 1 en `ChatView.conversational.test.ts`, identicos en HEAD limpio).
