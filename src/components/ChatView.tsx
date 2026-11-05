@@ -1074,7 +1074,7 @@ export function ChatView({ bot: profile }: { bot: Bot }) {
         </div>
         <div
           data-chathead-controls
-          className={cn("flex shrink-0 items-center gap-2", !phone && "@max-[30rem]/chathead:ml-auto @max-[30rem]/chathead:flex-wrap @max-[30rem]/chathead:justify-end @min-[30rem]/chathead:col-start-3 @min-[30rem]/chathead:justify-self-end")}
+          className={cn("relative flex shrink-0 items-center gap-2", !phone && "@max-[30rem]/chathead:ml-auto @max-[30rem]/chathead:flex-wrap @max-[30rem]/chathead:justify-end @min-[30rem]/chathead:col-start-3 @min-[30rem]/chathead:justify-self-end")}
         >
           {!simpleHead && (bot.busy || bot.waitingForTeammates) && (
             <button
@@ -1093,7 +1093,14 @@ export function ChatView({ bot: profile }: { bot: Bot }) {
           <EngineLimitNotice engine={bot.modelSelection?.instanceId} />
           {/* A18 (v140): el modelo y la intensidad viven ahora dentro del menu ... */}
           {/* A20 (v140): el selector de modelos de la 130, invisible, para que el menu ... lo abra directo. */}
-          {advanced && !remoteClient && <ModelPicker key={bot.threadId} bot={bot} threadId={bot.threadId} hideTrigger />}
+          {/* A21 (v140): el selector oculto se ancla al borde inferior-derecho del contenedor de controles, que
+              es donde vive el menu de 3 puntos, para que su ventana abra pegada y alineada con ese menu en vez
+              de muy a la izquierda. Se saca del flujo (absolute) para no meter un hueco de gap. */}
+          {advanced && !remoteClient && (
+            <div className="absolute right-0 top-full" aria-hidden="true">
+              <ModelPicker key={bot.threadId} bot={bot} threadId={bot.threadId} hideTrigger />
+            </div>
+          )}
           <LiveCallChip currentBotId={bot.id} onOpen={(botId, threadId) => openThread(dispatch, { botId, threadId }, state, showThreads)} />
           {!phone && !simpleHead && (
             <>

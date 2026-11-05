@@ -7415,5 +7415,6 @@
   "server.browser.stoppedWaiting": "Stopped waiting for the browser.",
   "composer.queued.capacityStarter": "Queued. Starter runs one thread at a time per bot, so this starts when the one running finishes. A bigger plan runs more.",
   "composer.queued.seePlans": "See plans",
-  "settings.threads.starter": "Starter runs one thread at a time per bot, and a bigger plan runs more. Work a bot starts for itself still runs, and each bot has its own one."
+  "settings.threads.starter": "Starter runs one thread at a time per bot, and a bigger plan runs more. Work a bot starts for itself still runs, and each bot has its own one.",
+  "composer.emoji": "Emoji"
 }

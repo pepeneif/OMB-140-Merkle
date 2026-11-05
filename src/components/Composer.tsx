@@ -33,6 +33,7 @@ import {
 import { DEVS_CHOICE, MentionMenu, teammateChoices, type MentionChoice } from "./MentionMenu"; import { useTeammates } from "@/state/team-people"; import { hiddenFromSidebar, useViewerEmail } from "@/lib/default-bot";
 import { SlashCommandMenu } from "./SlashCommandMenu";
 import { MentionTextarea } from "./MentionTextarea";
+import { ComposerEmoji } from "./ComposerEmoji";
 import { ComposerAttachments, pathForFile } from "./ComposerAttachments";
 import { PointedChips } from "./app/PointedChips"; import { SetupRequestChip, setupRequestPlaceholder } from "./SetupOffer";
 import { takePointedChips } from "@/lib/pointed-chips";
@@ -72,7 +73,7 @@ import { GroupCallButton } from "./GroupCallView";
 import { ApprovalChip, ComposerPlusMenu, GoalToggle, TeachTaskButton } from "./ComposerPlusMenu";
 import { PhonePlus } from "./PhonePlus";
 import { useThreadApproval } from "./thread-approval";
-import { useStackedField, useTallPill } from "./composer-wrap";
+import { useTallPill } from "./composer-wrap";
 import { useDesktopCapabilities } from "./DesktopCapabilities";
 import { ComposerReplyStrip } from "./ReplyQuote";
 import { escapeCancelsReply } from "@/lib/replies";
@@ -233,7 +234,6 @@ export function Composer({
   const [dismissedAt, setDismissedAt] = useState<number | null>(null);
   const [dismissedSlashAt, setDismissedSlashAt] = useState<number | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const stacked = useStackedField(inputRef, advanced && !singleRow, text);
   const draftIdRef = useRef(draftId);
   draftIdRef.current = draftId;
   const caretRef = useRef(0);
@@ -692,6 +692,27 @@ export function Composer({
     }
     setChannelMode((current) => current === "goal" ? "chat" : "goal");
   };
+  // NanoBot's emoji box: a chosen emoji lands at the caret and the field keeps it,
+  // instead of appending at the end. The mirror is untouched, so the caret stays put.
+  const insertEmoji = useCallback(
+    (emoji: string) => {
+      const input = inputRef.current;
+      const start = input?.selectionStart ?? caret;
+      const end = input?.selectionEnd ?? start;
+      const next = `${text.slice(0, start)}${emoji}${text.slice(end)}`;
+      editText(next);
+      const at = start + emoji.length;
+      setCaret(at);
+      requestAnimationFrame(() => {
+        const field = inputRef.current;
+        if (!field) return;
+        field.focus();
+        field.setSelectionRange(at, at);
+      });
+    },
+    [text, caret, editText],
+  );
+
   const goal = !group?.dm ? { on: effectiveChannelMode === "goal", onToggle: toggleGoal, solo: !group } : undefined;
 
   return (
@@ -803,7 +824,7 @@ export function Composer({
         )}
         <div className={singleRow ? cn("min-w-0 flex-1 rounded-[26px] px-3 py-1.5", ELEVATED_FLOAT) : "contents"}>
         {replyTo && <ComposerReplyStrip message={replyTo} fallbackName={bot?.name} onClear={onClearReply} />}
-        <div data-composer-row className={cn("flex items-end", simpleDock ? "gap-1.5" : "gap-1", !singleRow && !simpleDock && "@max-[30rem]/composer:flex-wrap", stacked && "flex-wrap")}>
+        <div data-composer-row className={cn("flex items-end", simpleDock ? "gap-1.5" : "gap-1", !singleRow && !simpleDock && "@max-[30rem]/composer:flex-wrap")}>
           <input
             ref={fileInput}
             type="file"
@@ -816,40 +837,65 @@ export function Composer({
             }}
           />
           {!locked && !singleRow && (
-            <div className={cn("flex items-center gap-1", simpleDock ? "shrink-0" : "flex-wrap")}>
-              {simpleDock && <ComposerPlusMenu onAttach={() => fileInput.current?.click()} goal={goal} teach={canLearn ? teachTask : undefined} />}
-              {advanced && <button
-                type="button"
-                onClick={() => fileInput.current?.click()}
-                aria-label={t("composer.attach")}
-                title={t("composer.attach")}
-                className="flex size-8 shrink-0 items-center justify-center rounded-full text-ink-secondary hover:bg-control hover:text-ink"
-              >
-                <Paperclip size={16} strokeWidth={1.75} absoluteStrokeWidth />
-              </button>}
-              {advanced && canLearn && <TeachTaskButton onClick={teachTask} />}
-              {/* Simple mode shows a mode's chip only while it is on, so a choice made in the + menu or the bot panel stays in view. */}
-              {goal && (advanced || goal.on) && <GoalToggle {...goal} compact={simpleDock} />}
-              {advanced && approvalChoice && <ApprovalModeSelector {...approvalChoice} />}
-              {simpleDock && approvalChoice && profile && bot && approvalModeFor(bot) !== approvalModeFor(profile) && <ApprovalChip choice={approvalChoice} />}
-              {modeBot && !remoteClient && advanced && (
-                <PlaceChip
-                  bot={modeBot}
-                  task={composerTask}
-                  live={Boolean(modeBot.busy)}
-                  disabled={Boolean(modeBot.busy)}
-                  onPin={(surface) => dispatch({ type: "updateTask", botId: modeBot.id, threadId: modeBot.threadId, patch: { surface } })}
-                />
-              )}
-            </div>
+            simpleDock ? (
+              <div className="flex shrink-0 items-center gap-1">
+                <ComposerPlusMenu onAttach={() => fileInput.current?.click()} goal={goal} teach={canLearn ? teachTask : undefined} />
+                {canLearn && <TeachTaskButton onClick={teachTask} />}
+                {/* Simple mode shows a mode's chip only while it is on, so a choice made in the + menu or the bot panel stays in view. */}
+                {goal && goal.on && <GoalToggle {...goal} compact />}
+                {approvalChoice && profile && bot && approvalModeFor(bot) !== approvalModeFor(profile) && <ApprovalChip choice={approvalChoice} />}
+              </div>
+            ) : (
+              /* Advanced mode's left cluster in two rows: the approval level and where the bot works on the top
+                 row, the room's goal chip with attach to its right on the bottom row, and the emoji picker above
+                 attach. On a narrow composer the row wraps as before, in the same order it always had. */
+              <div className="grid grid-cols-[auto_auto_auto] grid-rows-2 items-center justify-items-start gap-1 @max-[30rem]/composer:flex @max-[30rem]/composer:flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => fileInput.current?.click()}
+                  aria-label={t("composer.attach")}
+                  title={t("composer.attach")}
+                  className="col-start-3 row-start-2 flex size-8 shrink-0 items-center justify-center rounded-full text-ink-secondary hover:bg-control hover:text-ink"
+                >
+                  <Paperclip size={16} strokeWidth={1.75} absoluteStrokeWidth />
+                </button>
+                {canLearn && <div className="col-start-2 row-start-2"><TeachTaskButton onClick={teachTask} /></div>}
+                {goal && (
+                  <div className="col-span-1 col-start-1 row-start-2">
+                    <GoalToggle {...goal} />
+                  </div>
+                )}
+                {advanced && approvalChoice && (
+                  <div className="col-start-1 row-start-1">
+                    <ApprovalModeSelector {...approvalChoice} />
+                  </div>
+                )}
+                {modeBot && !remoteClient && advanced && (
+                  <div className="col-start-2 row-start-1">
+                    <PlaceChip
+                      bot={modeBot}
+                      task={composerTask}
+                      live={Boolean(modeBot.busy)}
+                      disabled={Boolean(modeBot.busy)}
+                      onPin={(surface) => dispatch({ type: "updateTask", botId: modeBot.id, threadId: modeBot.threadId, patch: { surface } })}
+                    />
+                  </div>
+                )}
+                {advanced && (
+                  <div className="col-start-3 row-start-1">
+                    <ComposerEmoji onPick={insertEmoji} disabled={Boolean(approval) || locked} />
+                  </div>
+                )}
+              </div>
+            )
           )}
           <MentionTextarea
-          wrapperClassName={singleRow || simpleDock ? undefined : cn("@max-[30rem]/composer:order-first @max-[30rem]/composer:basis-full", stacked && "order-first basis-full")}
+          wrapperClassName={singleRow || simpleDock ? undefined : "@max-[30rem]/composer:order-first @max-[30rem]/composer:basis-full"}
           inputRef={inputRef}
           peers={[...(group ? members ?? [] : state.bots.filter((member) => member.id !== bot?.id)), ...teammates.peers]}
           everyone={Boolean(group && !group.dm)}
           dir="auto"
-          rows={1}
+          rows={2}
           value={text}
           onChange={(e) => {
             if (recording) stopDictation();
@@ -940,10 +986,10 @@ export function Composer({
             className={cn(
               "block max-h-[9rem] w-full resize-none overflow-y-auto bg-transparent placeholder:text-ink-tertiary focus:outline-none",
               !simpleDock && "px-1 text-[15px]",
-              simpleDock ? "min-h-7 px-0.5 py-1 text-[14px] leading-5" : "min-h-6 py-1 leading-6",
+              simpleDock ? "min-h-7 px-0.5 py-1 text-[14px] leading-5" : "min-h-14 py-1 leading-6",
             )}
           />
-          <div data-composer-actions className={cn("flex items-center", simpleDock ? "gap-2" : "gap-1", !singleRow && !simpleDock && "@max-[30rem]/composer:ml-auto", stacked && "ml-auto")}>
+          <div data-composer-actions className={cn("flex items-center", simpleDock ? "gap-2" : "gap-1", !singleRow && !simpleDock && "@max-[30rem]/composer:ml-auto")}>
           {(simpleDock ? stoppable : busy) && !locked && (
           <button
             onClick={interruptTurn}
