@@ -186,3 +186,60 @@ chocan porque la UI de la 140 cambió. Se rehacen sobre la 140.
   (bloque del apilado reescrito) y `ChatView.controls.test.ts` (min-h-14) actualizadas. `tsc --noEmit` limpio;
   pruebas dirigidas **187/187** en verde (los fallos preexistentes —2 del badge de motor en
   `Sidebar.simple-mode.test.ts` y 1 de `bg-card` en `ChatView.conversational.test.ts`— son identicos en HEAD).
+
+---
+
+# Port a la v0.1.143 (rama `merkle/port-v143`)
+
+Rama **100% aparte** de la 140 (alfa sigue con la 140 intacta). Base: tag limpio
+`v0.1.143` (`c8e40ffbb`). Estrategia: **una sola fusion a 3 vias** del estado parcheado
+de la 140 (commit `1bb466d2a` = `base-v0.1.140` + 12 parches + bitacora) contra `v0.1.143`
+(`git merge --no-commit --no-ff 1bb466d2a`; merge-base = `4b74b80` = v0.1.140).
+Commit del merge: `99672b8ec`.
+
+## Los 13 archivos con conflicto (resueltos)
+
+Regla de resolucion: **la base 143 manda**; encima se re-aplica solo NUESTRA intencion.
+`package.json` (+ `emoji-picker-react` junto a `imapflow`), `pnpm-lock.yaml` (regenerado con
+`pnpm install`), `src/main.tsx` (+ `applyStoredBubbleWidths`), `TurnNarrationRun.tsx`
+(titulo por corrida con `run-open-state`), `en.json` (union + `composer.emoji`),
+`ChatMarkdown.tsx` (props `originals` + `underline`), `ChatView.tsx` (cabecera 143 +
+ModelPicker oculto A21; `ChatHeadRole` sin `chiefOfStaffBadge`), `ChatMoreMenu.tsx`
+(`UsageBars` 143 + `openModelPicker`), `Sidebar.tsx` (rail fix + panel `SidebarActiveThreads`
+de la 143, sin duplicar), `SidebarFooterNav.tsx` (lucide union + `useMemo`/`ReactNode`),
+`TriggersPage.tsx` (labels propios + h1 condicional 143), `Composer.tsx` (`useTallPill`; sin
+`useDesktopCapabilities`/`useStackedField`, que la 143 no tiene), `GroupView.tsx`
+(`borderColor` por bot + `intlLocale()`).
+
+## Parche 012 reducido (el punto de Jose)
+
+El parche **012 (v140-K)** traia dos mitades:
+- **Mitad A (descartada en el port):** asa `GripVertical` en linea (avatar-nombre) en modo
+  expandido. En la 143 **sobra**: la fila completa ya es la fuente de arrastre.
+- **Mitad B (conservada, es el PR):** habilitar el arrastre con el rail **colapsado**:
+  `enabled: (sections.interactive || density === "icons") && !phone`. En la 143
+  `sidebarLayoutInteractive()` da `false` con `density === "icons"`, por eso en el rail
+  colapsado las filas no eran arrastrables.
+
+## Verificacion
+
+`tsc -p tsconfig.json --noEmit` limpio. Pruebas dirigidas de los modulos tocados
+**1038/1038** en verde; guards (`Sidebar*`, `sidebar-bot-drop`, ratchet de tamano) **571/571**.
+Build de produccion (`vite build`) OK.
+
+**4 pruebas actualizadas** (divergencias intencionales de nuestros parches, ya presentes en la
+140 parcheada; NO eran regresiones del merge):
+- `Sidebar.simple-mode.test.ts` (x2): A16 quita el logo de proveedor del avatar → ahora se
+  afirma que el `model-badge` **no** aparece ni en el rail ni en Avanzado.
+- `ChatView.conversational.test.ts`: el parche B pone fondo de tarjeta en la respuesta final
+  con formato; en Avanzado la burbuja **si** lleva `bg-card`.
+- `GroupView.message-actions.test.ts`: el parche D5/A5 deja de recortar los mensajes del
+  usuario → ya no aparece "Show full message".
+
+**Ratchet de tamano** (`scripts/testing/file-size-ratchet.test.ts`): subidos los limites de
+`Sidebar.tsx` (1697), `ChatView.tsx` (1317), `GroupView.tsx` (1234), `ModelPicker.tsx` (1048)
+y anadido `Composer.tsx` (1041), como ya hizo el fork de la 140 (rama privada).
+
+## Estado
+
+Sin desplegar. Alfa sigue con la 140. Se despliega a alfa solo si Jose lo aprueba.
