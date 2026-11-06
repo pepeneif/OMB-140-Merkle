@@ -221,7 +221,7 @@ describe("sidebar top row", () => {
     expect(top).not.toContain("data-sidebar-top-buttons");
     expect(top).not.toContain("data-workspace-switcher");
     expect(top.indexOf('aria-label="Search bots and messages"')).toBeLessThan(top.indexOf('aria-label="New or share"'));
-    expect(top).toMatch(/data-sidebar-rail-top="true" class="flex flex-col items-center gap-2 pt-1"/);
+    expect(top).toMatch(/data-sidebar-rail-top="true" class="flex flex-col items-center gap-\[7px\] pt-1"/);
     expect(top).toMatch(/aria-label="New or share" class="[^"]*\bsize-9\b[^"]*\brounded-full\b/);
     const foot = html.slice(html.indexOf("data-sidebar-rail-footer"));
     const at = (marker: string) => {
@@ -252,9 +252,9 @@ describe("sidebar top row", () => {
     const row = topRow(html);
     expect(row).not.toContain("data-workspace-switcher");
     expect(row).not.toContain("data-sidebar-top-spacer");
-    expect(classesOf(row, "data-sidebar-top-row")).toEqual(["flex", "items-center", "flex-col", "gap-1", "px-2", "pt-3.5", "pb-1"]);
+    expect(classesOf(row, "data-sidebar-top-row")).toEqual(["flex", "items-center", "flex-col", "gap-[2px]", "px-2", "pt-[11px]", "pb-1"]);
     expect(row).not.toContain("data-traffic-light-space");
-    expect(classesOf(row, "data-sidebar-top-buttons")).toEqual(["relative", "flex", "shrink-0", "items-center", "flex-col", "gap-1"]);
+    expect(classesOf(row, "data-sidebar-top-buttons")).toEqual(["relative", "flex", "shrink-0", "items-center", "flex-col", "gap-[2px]"]);
     expect(html.match(/Switch server:/g)).toHaveLength(1);
   });
 });
@@ -305,7 +305,7 @@ describe("the button that hides and shows the window's rail of places", () => {
     const column = render();
     expect(column.indexOf("data-rail-toggle")).toBeGreaterThan(-1);
     expect(column.indexOf("data-rail-toggle")).toBeLessThan(column.indexOf("data-sidebar-top-buttons"));
-    expect(toggle(column)).toMatch(/class="[^"]*\bsize-\[46px\][^"]*\brounded-xl\b/);
+    expect(toggle(column)).toMatch(/class="[^"]*\bsize-8\b[^"]*\brounded-md\b/);
     fixture.advanced = false;
     const rail = render();
     expect(rail.indexOf("data-rail-toggle")).toBeLessThan(rail.indexOf("data-sidebar-rail-top"));

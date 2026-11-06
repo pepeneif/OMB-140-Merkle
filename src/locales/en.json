@@ -2788,6 +2788,7 @@
   "composer.attach": "Attach a file",
   "composer.attachFiles": "Attach files",
   "composer.teachTask": "Teach a task",
+  "composer.setupTask": "Set up this bot",
   "composer.goal.aria": "Finish together",
   "composer.goal.title": "Finish together: the team keeps working until the goal is complete",
   "composer.goal.soloAria": "Work until done",
@@ -9628,5 +9629,6 @@
   "remote.devices.removed": "Removed {name}.",
   "remote.e2e.anywhere": "Reachable from anywhere · end-to-end encrypted",
   "remote.e2e.connecting": "Connecting to MausBot Relay…",
-  "remote.e2e.local": "On this Wi-Fi and Tailscale · end-to-end encrypted"
+  "remote.e2e.local": "On this Wi-Fi and Tailscale · end-to-end encrypted",
+  "composer.emoji": "Emoji"
 }

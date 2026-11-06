@@ -60,6 +60,7 @@ import { showWorkingDots } from "@/lib/turn-tail";
 import { lastNonReceipt } from "@/lib/receipts";
 import { useTurnLive } from "@/state/turn-status"; import { useTurnNow } from "./NowCard"; import { useThreadRoutineRun } from "@/state/older-routine-runs";
 import { ChatMarkdown } from "./ChatMarkdown";
+import { userTextHasMarkdown } from "@/lib/remark-user-format";
 import { LiveToolsContext, useLiveToolIds } from "@/hooks/use-live-tool-ids";
 import { VoiceNoteBubble, type VoiceNoteAttachment } from "./VoiceNoteBubble";
 import { RawMarkdownView, RawToggleAction } from "./RawMarkdownToggle";
@@ -67,6 +68,7 @@ import { ThreadChip } from "./ThreadChip";
 import { HandoffChip } from "./HandoffReply"; import { TeammateChip } from "./TeammateChip"; import { useTeammates } from "@/state/team-people"; import type { MentionPeer } from "@/lib/mentions";
 import { NewConversationInstead } from "./NewConversationInstead";
 import { VerifyCard } from "./VerifyCard";
+import { BubbleResizeHandle } from "./BubbleResizeHandle";
 import { askText, runSkill, runSteps, runSummary, showRun, skillPrompt } from "@/lib/verify-steps";
 import { useShowRunCard } from "@/lib/run-card-preferences";
 import { useColorUserBubbles } from "@/lib/user-bubble-preference";
@@ -91,11 +93,10 @@ import { CallRecordRow } from "./CallRecordRow";
 import { AttachmentGallery, collectMessageFiles, replyAttachmentGroup, splitMessageAttachments } from "./AttachmentGallery";
 import { ScreenFrame } from "./ScreenFrame";
 import { CompactionChip, DigestChip } from "./DigestChip";
-import { RenameTitle } from "./RenameTitle"; import { ChatHeadRole, chiefOfStaffBadge } from "./BotRole";
-import { BotActivityPicker } from "./TaskPicker"; import { ChatHeadPill } from "./ChatHeadPill"; import { useStoreRef } from "@/state/store-ref";
+import { RenameTitle } from "./RenameTitle"; import { ChatHeadRole } from "./BotRole";
+import { BotActivityPicker, TaskPicker } from "./TaskPicker"; import { ChatHeadPill } from "./ChatHeadPill"; import { useStoreRef } from "@/state/store-ref";
 import { ELEVATED_FLOAT, ELEVATED_HOVER } from "./elevated";
-import { ModelPicker } from "./ModelPicker";
-import { ChatHeaderMenu, ChatMoreMenu } from "./ChatMoreMenu"; import { TeamOwnHelperHeader, TeamPrivateFirstLine, TeamPrivateHeader, TeamSharedHeader } from "./TeamPrivateChatsLine";
+import { ChatHeaderMenu, ChatMoreMenu } from "./ChatMoreMenu"; import { ModelPicker } from "./ModelPicker"; import { TeamOwnHelperHeader, TeamPrivateFirstLine, TeamPrivateHeader, TeamSharedHeader } from "./TeamPrivateChatsLine";
 import { useChatFindRequests } from "@/lib/chat-find";
 import { CitationSelectionToolbar, SentCitations } from "./CitationUI";
 import { SpeakButton } from "./SpeakButton";
@@ -111,6 +112,7 @@ import { StatusActivityRow } from "@/components/StatusActivityRow";
 import { CancelledTurnRow } from "./CancelledTurnRow";
 import { ActivityRun } from "./ActivityRun";
 import { TurnNarrationRun } from "./TurnNarrationRun";
+import { isNarrationText } from "@/lib/activity-runs";
 import { BubbleEditor } from "./BubbleEditor";
 import { ReplyBlocks } from "./ReplyBlocks";
 import { webhookMessageView } from "@/lib/webhook-message";
@@ -134,13 +136,11 @@ import { latestFailure, latestReply, type TranscriptSnapshot } from "@/lib/trans
 import { pendingApprovals } from "./PendingApproval";
 import { TranscriptAnnouncer } from "./TranscriptAnnouncer";
 import { JumpToLatestButton } from "./JumpToLatestButton";
-import { isBotTextRow, joinedCorners, needsStamp, quietRow, simpleRowLayout, SIMPLE_BOT_BUBBLE, SIMPLE_BUBBLE_MAX, SIMPLE_BUBBLE_TEXT, SIMPLE_STACKED, SIMPLE_USER_BUBBLE, type BubbleJoin } from "./chat-bubble";
-
-const USER_COLLAPSE_CHARS = 600;
-const USER_COLLAPSE_LINES = 8;
+import { isBotTextRow, joinedCorners, needsStamp, quietRow, simpleRowLayout, SIMPLE_BOT_BUBBLE, SIMPLE_BUBBLE_MAX, SIMPLE_BUBBLE_TEXT, SIMPLE_STACKED, SIMPLE_USER_BUBBLE, TINT_BORDER_CLASS, USER_TINT_BORDER, type BubbleJoin } from "./chat-bubble";
+import { MAUS_COLORS } from "@/lib/mascot";
 
 interface ChatRows {
-  botId: string; threadId: string; botName: string; botColor: Bot["color"]; voiceId?: string;
+  botId: string; threadId: string; botName: string; botColor: Bot["color"]; tintBorder?: boolean; voiceId?: string;
   tts: ConfigStatus["tts"]; localVoice: boolean;
   hasMore: boolean; bots: readonly Bot[];
   mentionPeers: readonly MentionPeer[]; mentionPerson: { profileName?: string };
@@ -316,6 +316,7 @@ const Bubble = memo(function Bubble({
   joinAbove = false,
   joinBelow = false,
   workedFor,
+  narration = false,
   editing,
   pinned,
   versions,
@@ -334,6 +335,8 @@ const Bubble = memo(function Bubble({
   joinBelow?: boolean;
   /** Simple mode: how long the turn this answer ends took, for its tooltip. */
   workedFor?: number;
+  /** A4 (v140): nota intermedia del turno — sin fondo y 2 px menor, se funde con el chat. */
+  narration?: boolean;
   editing: boolean;
   pinned: boolean;
   versions?: readonly Message[];
@@ -344,12 +347,16 @@ const Bubble = memo(function Bubble({
   replyTarget?: Message;
   onReply: (message: Message) => void;
 }) {
-  const { botId, threadId, botName, voiceId, tts, localVoice, bots, mentionPeers, mentionPerson, focus, dispatch, onBranch, bubbleStyle, conversational, simple, canReact, openedAt, speakerViewer } = useChatRows(), busy = onRegenerate || versions ? use(ChatBusyContext) : false;
+  const { botId, threadId, botName, botColor, tintBorder, voiceId, tts, localVoice, bots, mentionPeers, mentionPerson, focus, dispatch, onBranch, bubbleStyle, conversational, simple, canReact, openedAt, speakerViewer } = useChatRows(), busy = onRegenerate || versions ? use(ChatBusyContext) : false;
   const remoteClient = window.ogb?.remoteClient?.active === true;
   const peer = peerLine(message) ?? peerRequest(message, botId);
   const user = message.role === "user" && !peer;
   const speaker = user ? otherSpeaker(message, speakerViewer ?? null) : null;
   const ownBubbleStyle = speaker ? undefined : bubbleStyle;
+  // A10 (v140): con la opcion encendida, el borde de 1 px del color del bot marca mi burbuja y la final del bot.
+  const tinted = Boolean(USER_TINT_BORDER && tintBorder && !speaker && !peer);
+  const tintBorderColor = tinted ? MAUS_COLORS[botColor] : undefined;
+  const isFinalBotBubble = tinted && !user && !speaker && message.role === "bot" && message.kind === "text" && !narration && !message.automation;
   const [expanded, setExpanded] = useState(false);
   const focusedSearch = focus?.messageId === message.id && Boolean(focus.matchText);
   const [viewRaw, setViewRaw] = useState(false);
@@ -401,8 +408,8 @@ const Bubble = memo(function Bubble({
   const hasAttachments = Boolean(cited?.citations.length || (attachments && (attachments.images.length || attachments.files.length)));
   const attachmentsOnly = !webhookView && !replyTarget && !visibleText.trim() &&
     (user ? hasAttachments : generatedPaths.length + linkedFiles.length > 0);
-  const collapsible =
-    user && !webhookView && !expanded && (visibleText.length > USER_COLLAPSE_CHARS || visibleText.split("\n").length > USER_COLLAPSE_LINES);
+  // 0022 (D5, v140-A5): los mensajes del usuario ya no se recortan; se ven completos.
+  const collapsible = false;
   useEffect(() => {
     if (focusedSearch && collapsible) setExpanded(true);
   }, [focusedSearch, collapsible, focus?.nonce]);
@@ -459,21 +466,26 @@ const Bubble = memo(function Bubble({
           className={cn(
             tabled ? "w-full" : "w-fit",
             simple ? !tabled && SIMPLE_BUBBLE_MAX : "max-w-[min(var(--chat-bubble-max),var(--chat-bubble-pct))] rounded-2xl text-[15px] leading-relaxed",
+            !simple && "bbl",
+            !simple && (user ? "bbl-user" : "bbl-bot"),
             emerging && "turn-answer",
             user && webhookView
               ? cn("overflow-hidden border border-accent/25 bg-card text-ink", simple ? cn("rounded-[18px]", SIMPLE_BUBBLE_TEXT) : "shadow-[0_10px_30px_rgba(0,0,0,0.18)]")
               : attachmentsOnly || split || tabled
                 ? cn("text-ink", simple && SIMPLE_BUBBLE_TEXT)
                 : user
-                  ? cn("whitespace-pre-wrap [overflow-wrap:anywhere] text-ink", simple ? SIMPLE_USER_BUBBLE : "bg-bubble-user px-4 py-2.5", ownBubbleStyle && "user-bubble-colored", simple && ownBubbleStyle && "antialiased")
-                  : formatted
-                    ? cn(formattedReplyWidth(text), "px-1 text-ink")
-                    : simple ? SIMPLE_BOT_BUBBLE : "bg-card px-4 py-2.5 text-ink",
+                  ? cn("whitespace-pre-wrap [overflow-wrap:anywhere] text-ink", simple ? SIMPLE_USER_BUBBLE : "bg-bubble-user px-4 py-2.5", ownBubbleStyle && "user-bubble-colored", simple && ownBubbleStyle && "antialiased", tinted && TINT_BORDER_CLASS)
+                  : narration
+                    ? cn(formatted ? formattedReplyWidth(text) : "", "rounded-2xl px-4 py-[5px] text-[13px] text-ink")
+                    : formatted
+                      ? cn(formattedReplyWidth(text), "rounded-2xl bg-card px-4 py-2.5 text-ink", isFinalBotBubble && TINT_BORDER_CLASS)
+                      : cn(simple ? SIMPLE_BOT_BUBBLE : "bg-card px-4 py-2.5 text-ink", isFinalBotBubble && TINT_BORDER_CLASS),
             simple && join && !split && !attachmentsOnly && !tabled && joinedCorners(user ? "end" : "start", join),
           )}
-          style={user && !webhookView && !attachmentsOnly ? ownBubbleStyle : undefined}
+          style={user && !webhookView && !attachmentsOnly ? { ...ownBubbleStyle, ...(tinted ? { borderColor: tintBorderColor } : {}) } : (isFinalBotBubble ? { borderColor: tintBorderColor } : undefined)}
           title={workedFor === undefined ? new Date(message.at).toLocaleString(intlLocale()) : `${workedLabel(workedFor)} · ${new Date(message.at).toLocaleString(intlLocale())}`}
         >
+          {!webhookView && <BubbleResizeHandle kind={user ? "user" : "bot"} className="bbl-handle" />}
           {replyTarget && (
             <div className="mb-2">
               <ReplyQuote
@@ -511,7 +523,9 @@ const Bubble = memo(function Bubble({
                   data-citation-owner={botId}
                   data-citation-thread={threadId}
                 >
-                  <ThreadRefText text={visibleText} peers={mentionPeers} />
+                  {userTextHasMarkdown(visibleText)
+                    ? <ChatMarkdown text={visibleText} mentionPeers={mentionPeers} mentionPerson={mentionPerson} underline message={{ threadId, messageId: message.id }} />
+                    : <ThreadRefText text={visibleText} peers={mentionPeers} />}
                 </div>
               )}
               {cited && <SentCitations
@@ -789,6 +803,7 @@ const MessagesList = memo(function MessagesList({
                   onStartEdit={onStartEdit}
                   onCancelEdit={onCancelEdit}
                   onSubmitEdit={onSubmitEdit}
+                  narration={isNarrationText(m)}
                   onRegenerate={m.id === lastBotTextId && !m.automation ? onRegenerate : undefined}
                   replyTarget={lookups.replyTarget(m)}
                   onReply={onReply}
@@ -811,7 +826,7 @@ const MessagesList = memo(function MessagesList({
   );
 });
 
-const CHATHEAD_PILL = `flex min-w-0 items-center gap-2 rounded-full py-0.5 pl-1.5 text-ink ${ELEVATED_FLOAT}`;
+const CHATHEAD_PILL = `flex h-9 min-w-0 items-center gap-2 rounded-full py-0.5 pl-[18px] text-ink ${ELEVATED_FLOAT}`;
 
 export function ChatView({ bot: profile }: { bot: Bot }) {
   const bot = useMemo(() => currentTaskBot(profile), [profile]);
@@ -911,8 +926,8 @@ export function ChatView({ bot: profile }: { bot: Bot }) {
   const reactor = useReactor();
   const speakerViewer = state.config?.team && reactor !== "user" ? reactor : null;
   const rows = useMemo<ChatRows>(
-    () => ({ botId: bot.id, threadId: bot.threadId, botName: bot.name, botColor: bot.color, voiceId: bot.voice, tts, localVoice, hasMore, bots, mentionPeers, mentionPerson: { profileName: state.config?.profile?.name }, focus, showToolCalls, locale, dispatch, onBranch, bubbleStyle, conversational: isConversational(bot.replyStyle), simple: !advanced, canReact: canWrite !== false, openedAt, speakerViewer }),
-    [bot.id, bot.threadId, bot.name, bot.color, bot.voice, tts, localVoice, hasMore, bots, mentionPeers, state.config?.profile?.name, focus, showToolCalls, locale, dispatch, onBranch, bubbleStyle, bot.replyStyle, advanced, canWrite, openedAt, speakerViewer],
+    () => ({ botId: bot.id, threadId: bot.threadId, botName: bot.name, botColor: bot.color, tintBorder: colorMine, voiceId: bot.voice, tts, localVoice, hasMore, bots, mentionPeers, mentionPerson: { profileName: state.config?.profile?.name }, focus, showToolCalls, locale, dispatch, onBranch, bubbleStyle, conversational: isConversational(bot.replyStyle), simple: !advanced, canReact: canWrite !== false, openedAt, speakerViewer }),
+    [bot.id, bot.threadId, bot.name, bot.color, colorMine, bot.voice, tts, localVoice, hasMore, bots, mentionPeers, state.config?.profile?.name, focus, showToolCalls, locale, dispatch, onBranch, bubbleStyle, bot.replyStyle, advanced, canWrite, openedAt, speakerViewer],
   );
   const currentTask = bot.tasks?.find((task) => task.threadId === bot.threadId), place = effectivePlace(bot, currentTask), team = state.config?.team, privateChat = Boolean(team) && currentTask?.private === true, ownHelper = Boolean(team) && !privateChat && Boolean(bot.defaultBot?.person), sharedChat = Boolean(team) && !privateChat && !ownHelper;
 
@@ -1018,8 +1033,8 @@ export function ChatView({ bot: profile }: { bot: Bot }) {
           simpleHead ? "px-5 pt-2.5 pb-2.5 max-md:pl-14 max-md:pr-3" : "px-5 py-3 pl-11 md:pl-5 max-md:pl-14 max-md:pr-3",
         )}
       >
-        <div data-chathead-row className={cn("flex items-center justify-between", phone ? "gap-2" : "@max-[30rem]/chathead:flex-wrap @max-[30rem]/chathead:gap-y-1 @min-[30rem]/chathead:grid @min-[30rem]/chathead:grid-cols-[minmax(0,1fr)_minmax(0,auto)_minmax(max-content,1fr)]")}>
-        <div data-chathead-identity className={cn("flex min-w-0 items-center gap-2", phone ? "flex-1" : "@max-[30rem]/chathead:basis-full @min-[30rem]/chathead:col-start-2 @min-[30rem]/chathead:justify-self-center", simpleHead && phone && "justify-center")} style={headerNoDragStyle}>
+        <div data-chathead-row className={cn("flex items-center", phone ? "justify-between gap-2" : simpleHead ? "justify-end gap-2" : "justify-between @max-[30rem]/chathead:flex-wrap @max-[30rem]/chathead:gap-y-1 @min-[30rem]/chathead:grid @min-[30rem]/chathead:grid-cols-[minmax(0,1fr)_minmax(0,auto)_minmax(max-content,1fr)]")}>
+        <div data-chathead-identity className={cn("flex min-w-0 items-center gap-2", phone ? "flex-1" : simpleHead ? undefined : "@max-[30rem]/chathead:basis-full @min-[30rem]/chathead:col-start-2 @min-[30rem]/chathead:justify-self-center", simpleHead && phone && "justify-center")} style={headerNoDragStyle}>
           {simpleHead ? (
             <ChatHeadPill
               bot={bot}
@@ -1027,44 +1042,7 @@ export function ChatView({ bot: profile }: { bot: Bot }) {
               privacy={privateChat ? { kind: "private" } : ownHelper ? { kind: "ownHelper" } : sharedChat && team ? { kind: "shared", team: team.name, onlyPeopleAdded: bot.onlyPeopleAdded } : null}
               onToggle={() => dispatch({ type: "toggleSettings", open: !state.settingsOpen })}
             />
-          ) : advanced ? (
-            <div data-chathead-pill className={cn(CHATHEAD_PILL, "pr-1")}>
-              <button
-                type="button"
-                onClick={() => dispatch({ type: "toggleSettings", open: true })}
-                className="flex shrink-0 items-center justify-center rounded-full"
-                title={t("chat.openProfile")}
-                aria-label={t("chat.openProfileAria", { name: bot.name })}
-              >
-                <BotAvatar
-                  bot={bot}
-                  state={stateForBot({ ...bot, messages })}
-                  size={24}
-                  motion={mascotMotion?.kind ?? "none"}
-                  motionKey={mascotMotion?.nonce ?? 0}
-                  animated={headerAnimated}
-                />
-              </button>
-              <RenameTitle
-                value={bot.name}
-                onCommit={(name) => {
-                  if (window.ogb?.remoteClient?.active) {
-                    void api(`/api/bots/${bot.id}/profile`, { method: "PATCH", body: JSON.stringify({ name }) })
-                      .then(({ bot: updated }) => dispatch({ type: "botPatched", bot: updated }))
-                      .catch((cause) => dispatch({ type: "error", message: cause instanceof Error ? cause.message : String(cause) }));
-                  } else {
-                    dispatch({ type: "updateBot", botId: bot.id, patch: { name } });
-                  }
-                }}
-                onActivate={() => dispatch({ type: "toggleSettings", open: true })}
-                showEditButton
-                className="truncate text-[14px] font-semibold text-ink"
-                editButtonClassName="size-6 rounded-full"
-                inputClassName="max-w-[220px] rounded-full bg-inset px-2 py-0.5 text-[14px] font-semibold"
-              />
-              {chiefOfStaffBadge(bot)}
-            </div>
-          ) : (
+          ) : advanced ? null : (
             <button
               type="button"
               data-chathead-pill data-tour="bot-pill"
@@ -1076,7 +1054,6 @@ export function ChatView({ bot: profile }: { bot: Bot }) {
               <BotAvatar bot={bot} state={stateForBot({ ...bot, messages })} size={24}
                 motion={mascotMotion?.kind ?? "none"} motionKey={mascotMotion?.nonce ?? 0} animated={headerAnimated} />
               <span className="min-w-0 truncate text-[14px] font-medium text-ink">{bot.name}</span>
-              {chiefOfStaffBadge(bot)}
               <ChevronRight size={14} aria-hidden="true" className="-ml-2.5 w-0 shrink-0 text-ink-secondary opacity-0 transition-[width,margin,opacity] duration-150 group-hover:ml-0 group-hover:w-3.5 group-hover:opacity-100 group-focus-visible:ml-0 group-focus-visible:w-3.5 group-focus-visible:opacity-100" />
             </button>
           )}
@@ -1095,7 +1072,7 @@ export function ChatView({ bot: profile }: { bot: Bot }) {
         </div>
         <div
           data-chathead-controls
-          className={cn("flex shrink-0 items-center gap-2", !phone && "@max-[30rem]/chathead:ml-auto @max-[30rem]/chathead:flex-wrap @max-[30rem]/chathead:justify-end @min-[30rem]/chathead:col-start-3 @min-[30rem]/chathead:justify-self-end")}
+          className={cn("relative flex shrink-0 items-center gap-2", !phone && "@max-[30rem]/chathead:ml-auto @max-[30rem]/chathead:flex-wrap @max-[30rem]/chathead:justify-end @min-[30rem]/chathead:col-start-3 @min-[30rem]/chathead:justify-self-end")}
         >
           {!simpleHead && (bot.busy || bot.waitingForTeammates) && (
             <button
@@ -1112,9 +1089,43 @@ export function ChatView({ bot: profile }: { bot: Bot }) {
           )}
           <ThreadContextWarning bot={bot} messages={messages} />
           {phone && <UsageAlert engine={bot.modelSelection?.instanceId} />}
-          {/* The model and the bot's computer stay in view in both modes; Simple mode moves only ⋯ into the bot panel. */}
-          {!phone && <ModelPicker key={bot.threadId} bot={bot} threadId={bot.threadId} />}
+          {/* A18 (v140): el modelo y la intensidad viven ahora dentro del menu ... */}
+          {/* A20 (v140): el selector de modelos de la 130, invisible, para que el menu ... lo abra directo. */}
+          {/* A21 (v140): el selector oculto se ancla al borde inferior-derecho del contenedor de controles, que
+              es donde vive el menu de 3 puntos, para que su ventana abra pegada y alineada con ese menu en vez
+              de muy a la izquierda. Se saca del flujo (absolute) para no meter un hueco de gap. */}
+          {advanced && !remoteClient && (
+            <div className="absolute right-0 top-full" aria-hidden="true">
+              <ModelPicker key={bot.threadId} bot={bot} threadId={bot.threadId} hideTrigger />
+            </div>
+          )}
           <LiveCallChip currentBotId={bot.id} onOpen={(botId, threadId) => openThread(dispatch, { botId, threadId }, state, showThreads)} />
+          {!phone && !simpleHead && (
+            <>
+              {/* A17 (v140): el nombre del bot con su lapiz, arriba a la derecha (donde estaba el modelo). */}
+              <div data-chathead-name className={cn(CHATHEAD_PILL, "pr-1")}>
+                <RenameTitle
+                  value={bot.name}
+                  onCommit={(name) => {
+                    if (window.ogb?.remoteClient?.active) {
+                      void api(`/api/bots/${bot.id}/profile`, { method: "PATCH", body: JSON.stringify({ name }) })
+                        .then(({ bot: updated }) => dispatch({ type: "botPatched", bot: updated }))
+                        .catch((cause) => dispatch({ type: "error", message: cause instanceof Error ? cause.message : String(cause) }));
+                    } else {
+                      dispatch({ type: "updateBot", botId: bot.id, patch: { name } });
+                    }
+                  }}
+                  onActivate={() => dispatch({ type: "toggleSettings", open: true })}
+                  showEditButton
+                  className="truncate text-[14px] font-semibold text-ink"
+                  editButtonClassName="size-6 rounded-full"
+                  inputClassName="max-w-[220px] rounded-full bg-inset px-2 py-0.5 text-[14px] font-semibold"
+                />
+              </div>
+              {/* A19 (v140): desplegable de hilos abiertos, entre el nombre y el icono de la computadora. */}
+              <TaskPicker bot={bot} variant="header" />
+            </>
+          )}
           {!phoneMenu && <button
             data-tour="computer"
             onClick={(event) => { if (!state.computerOpen) rememberComputerPanelOpen({ botId: bot.id, opener: event.currentTarget, tabs: event.detail === 0 }); dispatch({ type: "toggleComputer" }); }}

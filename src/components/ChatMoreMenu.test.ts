@@ -13,6 +13,7 @@ const fixture = vi.hoisted(() => {
     dispatch: vi.fn(),
     inspectorOpen: false,
     find: vi.fn(),
+    modelPicker: vi.fn(() => true),
   };
 });
 vi.mock("@/state/store", async (importOriginal) => {
@@ -24,6 +25,10 @@ vi.mock("@/lib/thread-preferences", () => ({ useShowThreads: () => fixture.advan
 vi.mock("@/lib/chat-find", async (importOriginal) => ({
   ...await importOriginal<typeof import("@/lib/chat-find")>(),
   requestChatFind: fixture.find,
+}));
+vi.mock("@/lib/model-picker-open", async (importOriginal) => ({
+  ...await importOriginal<typeof import("@/lib/model-picker-open")>(),
+  requestModelPicker: fixture.modelPicker,
 }));
 vi.mock("./SidebarPopoverMenu", async (importOriginal) => ({
   ...await importOriginal<typeof import("./SidebarPopoverMenu")>(),
@@ -66,6 +71,8 @@ beforeEach(() => {
   fixture.inspectorOpen = false;
   fixture.dispatch.mockClear();
   fixture.find.mockClear();
+  fixture.modelPicker.mockReset();
+  fixture.modelPicker.mockReturnValue(true);
 });
 
 describe("ChatMoreMenu, the round ⋯ for the bot panel", () => {
@@ -81,7 +88,7 @@ describe("ChatMoreMenu, the round ⋯ for the bot panel", () => {
 
   it("offers threads in Simple mode, and Usage and the Inspector unlocked", () => {
     const menu = menuOf(createElement(ChatMoreMenu, { bot }));
-    expect(keys(menu.items)).toEqual(["find", "new-thread", "threads", "copy", "download", "activity", "inspector"]);
+    expect(keys(menu.items)).toEqual(["find", "model", "reasoning", "new-thread", "threads", "copy", "download", "activity", "inspector"]);
     for (const item of menu.items) {
       expect(item.disabled, item.key).toBeFalsy();
       expect(item.heading ?? "", item.key).not.toBe("In Advanced mode");
@@ -117,8 +124,24 @@ describe("ChatMoreMenu, the round ⋯ for the bot panel", () => {
 
   it("leaves All threads out while the bot has one thread", () => {
     const single = { ...bot, threadId: "main", tasks: [task("main", "Our chat", 1), task("routine", "Morning digest", 5, { routineRunId: "run-1" })] };
-    expect(keys(menuOf(createElement(ChatMoreMenu, { bot: single })).items)).toEqual(["find", "new-thread", "copy", "download", "activity", "inspector"]);
+    expect(keys(menuOf(createElement(ChatMoreMenu, { bot: single })).items)).toEqual(["find", "model", "reasoning", "new-thread", "copy", "download", "activity", "inspector"]);
     expect(keys(menuOf(createElement(ChatMoreMenu, { bot: { ...bot, tasks: undefined } })).items)).not.toContain("threads");
+  });
+
+  it("opens the model picker directly from the model row, without opening Settings", () => {
+    const menu = menuOf(createElement(ChatMoreMenu, { bot }));
+    expect(keys(menu.items)).toContain("model");
+    menu.items.find((item) => item.key === "model")!.onSelect();
+    expect(fixture.modelPicker).toHaveBeenCalledWith("side");
+    expect(fixture.dispatch).not.toHaveBeenCalled();
+  });
+
+  it("falls back to opening Settings when no picker is mounted for the thread", () => {
+    fixture.modelPicker.mockReturnValue(false);
+    const menu = menuOf(createElement(ChatMoreMenu, { bot }));
+    menu.items.find((item) => item.key === "model")!.onSelect();
+    expect(fixture.modelPicker).toHaveBeenCalledWith("side");
+    expect(fixture.dispatch).toHaveBeenCalledWith({ type: "toggleSettings", open: true, section: "model" });
   });
 
   it("opens the chat's find bar for the thread on screen", () => {
@@ -155,7 +178,7 @@ describe("ChatHeaderMenu, Advanced mode's header ⋯", () => {
   it("keeps main's items, trigger and hover menu below the header", () => {
     fixture.advanced = true;
     const menu = menuOf(createElement(ChatHeaderMenu, { bot }));
-    expect(keys(menu.items)).toEqual(["find", "copy", "download", "activity", "inspector"]);
+    expect(keys(menu.items)).toEqual(["find", "model", "reasoning", "copy", "download", "activity", "inspector"]);
     expect(menu.items.find((item) => item.key === "inspector")).toMatchObject({ separatorBefore: true });
     expect(menu.items.every((item) => !item.disabled && item.heading !== "In Advanced mode")).toBe(true);
     expect(menu).toMatchObject({ placement: "below", openOnHover: true });
