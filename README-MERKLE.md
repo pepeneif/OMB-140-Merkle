@@ -186,3 +186,10 @@ chocan porque la UI de la 140 cambió. Se rehacen sobre la 140.
   (bloque del apilado reescrito) y `ChatView.controls.test.ts` (min-h-14) actualizadas. `tsc --noEmit` limpio;
   pruebas dirigidas **187/187** en verde (los fallos preexistentes —2 del badge de motor en
   `Sidebar.simple-mode.test.ts` y 1 de `bg-card` en `ChatView.conversational.test.ts`— son identicos en HEAD).
+
+- **CI: cron nocturno desactivado (2026-11-06)**: el workflow `CI` traia un bloque `schedule: cron "17 21 * * *"`
+  (lane completo cada noche). En este fork solo producia runs rojos por flakiness de infraestructura del runner
+  (timeouts de e2e, `spawn /engine ENOENT`) y correos de fallo de GitHub, sin relacion con los parches. Se quita
+  el bloque `schedule` de `.github/workflows/ci.yml` (commit `114523df21fa`, rama `base-v0.1.140`); los triggers
+  `workflow_dispatch`, `push`, `pull_request` y `merge_group` quedan intactos, igual que release/paquete/npm/docs.
+  Para restaurarlo, volver a pegar las dos lineas del cron bajo `merge_group:`.
